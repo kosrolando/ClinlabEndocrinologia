@@ -8,7 +8,7 @@
     <link rel="manifest" href="manifest.json" />
     <link rel="icon" href="assets/icon.svg" />
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=28" />
+    <link rel="stylesheet" href="styles.css?v=33" />
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
   </head>
   <body>
@@ -43,6 +43,20 @@
           <button id="printBtn">Imprimir</button>
         </div>
       </header>
+
+      <div id="purgeNoticeBanner" class="purge-notice-banner" style="display: none;">
+        <div class="purge-notice-content">
+          <div class="purge-notice-icon">⚠️</div>
+          <div class="purge-notice-body">
+            <strong id="purgeNoticeTitle">Aviso de Depuración Automática de Registros (Política de 12 Meses)</strong>
+            <p id="purgeNoticeText">Se han detectado registros que superan el período de retención de 12 meses. Serán depurados automáticamente en <strong id="purgeNoticeDays">7</strong> días para mantener el almacenamiento ligero.</p>
+          </div>
+        </div>
+        <div class="purge-notice-actions">
+          <button type="button" id="downloadExpiredBackupBtn" class="purge-btn-download">Descargar Registros Vencidos</button>
+          <button type="button" id="downloadAllBackupBtn" class="purge-btn-secondary">Descargar Respaldo Completo</button>
+        </div>
+      </div>
 
       <section id="dashboard" class="view active">
         <div class="metrics">
@@ -253,6 +267,7 @@
                   <input id="outsourceDateFrom" type="date" title="Desde fecha" />
                   <input id="outsourceDateTo" type="date" title="Hasta fecha" />
                 </div>
+                <button type="button" id="printOutsourceBtn" style="background: var(--teal); color: white; border: none; cursor: pointer; padding: 0 15px; border-radius: 6px; font-weight: bold; display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 36px; transition: background 0.2s;" title="Imprimir Lista de Envío de Muestras">Imprimir Lista</button>
               </div>
             </div>
             <div id="outsourceFilterContainer" class="noPrint"></div>
@@ -392,21 +407,49 @@
             <!-- collabForm removed -->
             <div class="panel">
               <div class="exportBox">
-                <h2>Exportar datos a Excel</h2>
-                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                  <label style="flex: 1;">Fecha inicial<input id="exportDateFrom" type="date" /></label>
-                  <label style="flex: 1;">Fecha final<input id="exportDateTo" type="date" /></label>
+                <h2>Archivo y Respaldos Cronológicos (12 Meses)</h2>
+                <div class="chrono-stats-badges" style="margin-bottom: 12px;">
+                  <span id="chronoBadgeTotal" class="chrono-badge total-badge">Total: 0 registros</span>
+                  <span id="chronoBadgeActive" class="chrono-badge active-badge">Activos (≤3m): 0</span>
+                  <span id="chronoBadgeArchive" class="chrono-badge archive-badge">Históricos (4-12m): 0</span>
                 </div>
-                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                  <button type="button" id="refreshSystem">Actualizar y refrescar sistema</button>
-                  <button type="button" id="exportExcel">Exportar tablas Excel</button>
+                
+                <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 10px;">Seleccione el período cronológico deseado para descargar su respaldo estructurado o exportación:</p>
+                <div class="chrono-selectors-grid">
+                  <label>Año
+                    <select id="chronoYearSelect"><option value="">Todos los años</option></select>
+                  </label>
+                  <label>Mes
+                    <select id="chronoMonthSelect"><option value="">Todos los meses</option></select>
+                  </label>
+                  <label>Día
+                    <select id="chronoDaySelect"><option value="">Todos los días</option></select>
+                  </label>
+                </div>
+                
+                <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px;">
+                  <button type="button" id="downloadChronoJsonBtn" style="background: var(--teal); color: white; border: none; padding: 9px 14px; border-radius: 6px; cursor: pointer; font-weight: 600;">📥 Descargar Respaldo JSON</button>
+                  <button type="button" id="downloadChronoExcelBtn" style="background: #10b981; color: white; border: none; padding: 9px 14px; border-radius: 6px; cursor: pointer; font-weight: 600;">📊 Exportar a Excel</button>
+                  <button type="button" id="downloadFullBackupBtn" style="background: #3b82f6; color: white; border: none; padding: 9px 14px; border-radius: 6px; cursor: pointer; font-weight: 600;">📦 Respaldo Completo (12 Meses)</button>
+                </div>
+
+                <div style="margin-top: 20px; border-top: 1px dashed var(--line); padding-top: 14px;">
+                  <h3 style="font-size: 0.95rem; margin-bottom: 8px;">Exportación por Rango de Fechas</h3>
+                  <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <label style="flex: 1;">Fecha inicial<input id="exportDateFrom" type="date" /></label>
+                    <label style="flex: 1;">Fecha final<input id="exportDateTo" type="date" /></label>
+                  </div>
+                  <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button type="button" id="refreshSystem">Actualizar y refrescar sistema</button>
+                    <button type="button" id="exportExcel">Exportar rango Excel</button>
+                  </div>
                 </div>
               </div>
               <div class="backupWindow" style="margin-top: 20px;">
                 <h2>Historial de respaldos</h2>
                 <div id="backupHistory" class="backupHistory"></div>
               </div>
-              <p class="note" style="margin-top: 10px;">La exportacion genera un archivo compatible con Excel. El respaldo online debe realizarse al menos cada dos meses usando el enlace configurado.</p>
+              <p class="note" style="margin-top: 10px;">Los respaldos organizan los registros cronológicamente (Año/Mes/Día). Los datos se conservan por 12 meses; los registros vencidos se depuran automáticamente tras 1 semana de preaviso.</p>
             </div>
             <div class="panel adminOnly exportBox">
               <h2>Administracion tecnica</h2>
@@ -488,6 +531,6 @@
         </div>
       </section>
     </div>
-    <script type="module" src="app.js?v=32"></script>
+    <script type="module" src="app.js?v=33"></script>
   </body>
 </html>

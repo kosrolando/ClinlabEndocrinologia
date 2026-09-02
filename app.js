@@ -10,27 +10,97 @@ function getRequestPeriod(dateStr) {
   return "sin_fecha";
 }
 
+function parseChronologicalKey(dateStr) {
+  if (!dateStr || typeof dateStr !== "string") {
+    const now = new Date();
+    const y = String(now.getFullYear());
+    const m = String(now.getMonth() + 1).padStart(2, "0");
+    const d = String(now.getDate()).padStart(2, "0");
+    return { year: y, month: m, day: d, period: `${y}_${m}`, fullDate: `${y}-${m}-${d}` };
+  }
+  const parts = dateStr.split("-");
+  const y = parts[0] || "sin_fecha";
+  const m = parts[1] || "01";
+  const d = parts[2] || "01";
+  return {
+    year: y,
+    month: m,
+    day: d,
+    period: `${y}_${m}`,
+    fullDate: `${y}-${m}-${d}`
+  };
+}
+
+function groupRequestsChronologically(requests) {
+  const tree = {};
+  for (const req of requests || []) {
+    if (!req) continue;
+    const { year, month, day } = parseChronologicalKey(req.date);
+    tree[year] ||= {};
+    tree[year][month] ||= {};
+    tree[year][month][day] ||= [];
+    tree[year][month][day].push(req);
+  }
+  return tree;
+}
+
 const requestsIDB = {
   dbName: "ClinLabRequestsStorageDB",
   storeName: "requestsStore",
+  chronoStoreName: "chronologicalStore",
+  _cachedAll: null,
+  
   getDB() {
     return new Promise((resolve) => {
       if (typeof window === "undefined" || !window.indexedDB) return resolve(null);
-      const req = indexedDB.open(this.dbName, 1);
-      req.onupgradeneeded = () => {
-        try { req.result.createObjectStore(this.storeName); } catch (e) {}
+      const req = indexedDB.open(this.dbName, 2);
+      req.onupgradeneeded = (e) => {
+        const db = req.result;
+        try {
+          if (!db.objectStoreNames.contains(this.storeName)) {
+            db.createObjectStore(this.storeName);
+          }
+          if (!db.objectStoreNames.contains(this.chronoStoreName)) {
+            db.createObjectStore(this.chronoStoreName);
+          }
+        } catch (err) {
+          console.warn("[Storage Shield] Upgrade store error:", err);
+        }
       };
       req.onsuccess = () => resolve(req.result);
       req.onerror = () => resolve(null);
     });
   },
+
   async saveAll(requests) {
+    if (!Array.isArray(requests)) return;
+    this._cachedAll = requests;
     try {
       const db = await this.getDB();
       if (!db) return;
+      
+      const chronological = groupRequestsChronologically(requests);
+      
       return new Promise((resolve) => {
-        const tx = db.transaction(this.storeName, "readwrite");
-        tx.objectStore(this.storeName).put(requests, "all_requests");
+        const tx = db.transaction([this.storeName, this.chronoStoreName], "readwrite");
+        const reqStore = tx.objectStore(this.storeName);
+        const chronoStore = tx.objectStore(this.chronoStoreName);
+        
+        reqStore.put(requests, "all_requests");
+        reqStore.put({
+          updatedAt: new Date().toISOString(),
+          total: requests.length
+        }, "metadata");
+        
+        chronoStore.clear();
+        for (const [year, months] of Object.entries(chronological)) {
+          for (const [month, days] of Object.entries(months)) {
+            for (const [day, dayReqs] of Object.entries(days)) {
+              chronoStore.put(dayReqs, `${year}_${month}_${day}`);
+            }
+          }
+        }
+        
         tx.oncomplete = () => resolve(true);
         tx.onerror = () => resolve(false);
       });
@@ -38,19 +108,98 @@ const requestsIDB = {
       console.warn("[Storage Shield] IndexedDB save error:", e);
     }
   },
+
   async loadAll() {
+    if (this._cachedAll && this._cachedAll.length > 0) return this._cachedAll;
     try {
       const db = await this.getDB();
       if (!db) return null;
       return new Promise((resolve) => {
         const tx = db.transaction(this.storeName, "readonly");
         const req = tx.objectStore(this.storeName).get("all_requests");
-        req.onsuccess = () => resolve(req.result || null);
+        req.onsuccess = () => {
+          const res = req.result || [];
+          this._cachedAll = res;
+          resolve(res);
+        };
         req.onerror = () => resolve(null);
       });
     } catch (e) {
       return null;
     }
+  },
+
+  async loadByPeriod(yearFilter, monthFilter, dayFilter) {
+    const all = await this.loadAll() || [];
+    return all.filter((req) => {
+      if (!req || !req.date) return false;
+      const { year, month, day } = parseChronologicalKey(req.date);
+      if (yearFilter && year !== yearFilter) return false;
+      if (monthFilter && month !== monthFilter) return false;
+      if (dayFilter && day !== dayFilter) return false;
+      return true;
+    });
+  },
+
+  async search(query) {
+    if (!query) return [];
+    const q = String(query).toLowerCase().trim();
+    const all = await this.loadAll() || [];
+    return all.filter((req) => {
+      if (!req) return false;
+      return (
+        (req.name && req.name.toLowerCase().includes(q)) ||
+        (req.code && req.code.toLowerCase().includes(q)) ||
+        (req.insuranceCode && req.insuranceCode.toLowerCase().includes(q)) ||
+        (req.date && req.date.includes(q))
+      );
+    });
+  },
+
+  async getChronologicalTree() {
+    const all = await this.loadAll() || [];
+    const tree = {};
+    const now = Date.now();
+    const MS_90 = 90 * 24 * 60 * 60 * 1000;
+    const MS_365 = 365 * 24 * 60 * 60 * 1000;
+    
+    let activeCount = 0;
+    let archiveCount = 0;
+    let expiredCount = 0;
+
+    for (const req of all) {
+      if (!req) continue;
+      const { year, month, day } = parseChronologicalKey(req.date);
+      tree[year] ||= {};
+      tree[year][month] ||= new Set();
+      tree[year][month].add(day);
+
+      let reqTime = 0;
+      if (req.date) {
+        const [y, m, d] = req.date.split("-").map(Number);
+        reqTime = new Date(y, (m || 1) - 1, d || 1).getTime();
+      }
+      const age = now - reqTime;
+      if (age <= MS_90) activeCount++;
+      else if (age <= MS_365) archiveCount++;
+      else expiredCount++;
+    }
+
+    const formattedTree = {};
+    for (const y of Object.keys(tree).sort().reverse()) {
+      formattedTree[y] = {};
+      for (const m of Object.keys(tree[y]).sort().reverse()) {
+        formattedTree[y][m] = Array.from(tree[y][m]).sort().reverse();
+      }
+    }
+
+    return {
+      tree: formattedTree,
+      totalCount: all.length,
+      activeCount,
+      archiveCount,
+      expiredCount
+    };
   }
 };
 
@@ -100,7 +249,7 @@ function loadAllLocalRequests() {
 
 function saveLocalRequestsSegregated(requests) {
   try {
-    // Also save to IndexedDB as high-capacity backup
+    // Guaranteed high-capacity backup to IndexedDB
     requestsIDB.saveAll(requests);
 
     const groups = {};
@@ -136,9 +285,7 @@ function saveLocalRequestsSegregated(requests) {
         localStorage.setItem(`clinlab.requests.${p}`, JSON.stringify(groups[p]));
       } catch (e) {
         if (e.name === "QuotaExceededError" || e.code === 22) {
-          console.error(`[Storage Shield] CUOTA EXCEDIDA al guardar periodo ${p}. Los datos están respaldados en IndexedDB. Ejecute enforceRetentionPolicy() para liberar espacio.`);
-          // Los datos siguen en IndexedDB (línea 104 de este mismo bloque)
-          // La retención automática diaria liberará espacio en el próximo ciclo.
+          console.error(`[Storage Shield] CUOTA EXCEDIDA al guardar periodo ${p}. Los datos están respaldados en IndexedDB.`);
         } else {
           console.warn(`[Storage Shield] No se pudo guardar la petición para el periodo ${p} en LocalStorage (respaldado en IndexedDB):`, e);
         }
@@ -1193,85 +1340,334 @@ function cleanupEmptyTests() {
 }
 
 // ---------------------------------------------------------------------------
-// POLÍTICA DE RETENCIÓN DE REGISTROS
-// Activos  : fecha ≤ 90 días  → state.requests (editables)
-// Histórico: 91–365 días      → clinlab.archive.YYYY_MM (solo lectura)
-// Eliminado : > 365 días      → se borra del cliente (ya exportado al servidor)
+// POLÍTICA DE ALMACENAMIENTO Y RETENCIÓN (12 MESES)
+// - Activos  : fecha ≤ 90 días (últimos 3 meses) → state.requests (Hot Memory)
+// - Histórico: 91–365 días (meses 4 a 12)       → requestsIDB / Archivo interno
+// - Vencidos : > 365 días                        → Preaviso de 7 días antes de depuración
 // ---------------------------------------------------------------------------
 
-function saveLocalArchive(archiveReqs) {
-  try {
-    const groups = {};
-    for (const req of archiveReqs) {
-      if (!req) continue;
-      const p = getRequestPeriod(req.date);
-      groups[p] ||= [];
-      groups[p].push(req);
-    }
-    const archiveIndex = Object.keys(groups);
-    // Limpiar períodos de archivo que ya no existen
-    let oldArchiveIndex = [];
-    try { oldArchiveIndex = JSON.parse(localStorage.getItem("clinlab.archive.index")) || []; } catch (e) {}
-    for (const p of oldArchiveIndex) {
-      if (!archiveIndex.includes(p)) {
-        try { localStorage.removeItem(`clinlab.archive.${p}`); } catch (e) {}
-      }
-    }
-    try { localStorage.setItem("clinlab.archive.index", JSON.stringify(archiveIndex)); } catch (e) {}
-    for (const p of archiveIndex) {
-      try {
-        localStorage.setItem(`clinlab.archive.${p}`, JSON.stringify(groups[p]));
-      } catch (e) {
-        console.warn(`[Archivo] No se pudo guardar período histórico ${p}:`, e);
-      }
-    }
-  } catch (err) {
-    console.error("[Archivo] Error inesperado en saveLocalArchive:", err);
+async function enforceRetentionWithNotice() {
+  const allReqs = await requestsIDB.loadAll() || state.requests || [];
+  if (!Array.isArray(allReqs) || allReqs.length === 0) {
+    renderPurgeNotice(null);
+    return;
   }
-}
 
-function loadLocalArchive() {
-  let index = [];
-  try { index = JSON.parse(localStorage.getItem("clinlab.archive.index")) || []; } catch (e) { index = []; }
-  let allArchived = [];
-  for (const period of index) {
-    try {
-      const reqs = JSON.parse(localStorage.getItem(`clinlab.archive.${period}`)) || [];
-      allArchived = allArchived.concat(reqs);
-    } catch (e) {}
-  }
-  return allArchived;
-}
-
-function enforceRetentionPolicy() {
-  if (!Array.isArray(state.requests)) return;
   const nowDate = new Date();
   nowDate.setHours(0, 0, 0, 0);
   const nowMs = nowDate.getTime();
-  const MS_90  = 90  * 24 * 60 * 60 * 1000; // 3 meses → límite activo
-  const MS_365 = 365 * 24 * 60 * 60 * 1000; // 12 meses → límite máximo
+  const MS_90 = 90 * 24 * 60 * 60 * 1000;
+  const MS_365 = 365 * 24 * 60 * 60 * 1000;
 
-  const active  = [];
+  const active = [];
   const archive = [];
-  let   removed = 0;
+  const expired = [];
 
-  for (const req of state.requests) {
+  for (const req of allReqs) {
     if (!req) continue;
-    if (!req.date) { active.push(req); continue; } // sin fecha → conservar como activo
+    if (!req.date) {
+      active.push(req);
+      continue;
+    }
     const [y, m, d] = req.date.split("-").map(Number);
-    const age = nowMs - new Date(y, m - 1, d).getTime();
-    if (age > MS_365) { removed++; continue; }   // > 12 meses → eliminar del cliente
-    if (age > MS_90)  { archive.push(req); continue; } // 3–12 meses → histórico
-    active.push(req);                              // ≤ 3 meses → activo
+    const reqMs = new Date(y, (m || 1) - 1, d || 1).getTime();
+    const age = nowMs - reqMs;
+
+    if (age > MS_365) {
+      expired.push(req);
+    } else if (age > MS_90) {
+      archive.push(req);
+    } else {
+      active.push(req);
+    }
   }
 
-  const prevCount = state.requests.length;
-  if (active.length !== prevCount || archive.length > 0 || removed > 0) {
-    saveLocalArchive(archive);
+  // Verificar estado de registros vencidos (> 12 meses)
+  if (expired.length > 0) {
+    let notice = state.settings.purgeNotice;
+    if (!notice || !notice.firstNotified) {
+      // Iniciar período de preaviso de 7 días
+      notice = {
+        firstNotified: new Date().toISOString(),
+        count: expired.length,
+        oldestDate: expired[0]?.date || "",
+        newestExpiredDate: expired[expired.length - 1]?.date || ""
+      };
+      state.settings.purgeNotice = notice;
+      store.set("clinlab.settings", state.settings);
+      console.log(`[Almacenamiento] Iniciado preaviso de depuración de 7 días para ${expired.length} registros.`);
+    }
+
+    const elapsedMs = Date.now() - new Date(notice.firstNotified).getTime();
+    const elapsedDays = Math.floor(elapsedMs / (1000 * 60 * 60 * 24));
+    const daysRemaining = Math.max(0, 7 - elapsedDays);
+
+    if (elapsedDays < 7) {
+      // Aún dentro del período de preaviso de 1 semana
+      renderPurgeNotice({
+        count: expired.length,
+        daysRemaining: daysRemaining || 1,
+        expiredRecords: expired
+      });
+      // Mantener activos + archivo + vencidos en IDB mientras dure el preaviso
+      await requestsIDB.saveAll([...active, ...archive, ...expired]);
+    } else {
+      // Han transcurrido los 7 días de preaviso: ejecutar depuración automática
+      console.log(`[Almacenamiento] Ejecutando depuración automática de ${expired.length} registros tras 7 días de aviso.`);
+      const remainingRecords = [...active, ...archive];
+      await requestsIDB.saveAll(remainingRecords);
+      state.settings.purgeNotice = null;
+      store.set("clinlab.settings", state.settings);
+      renderPurgeNotice(null);
+      toast(`Depuración completada: se han liberado ${expired.length} registros mayores a 12 meses.`);
+    }
+  } else {
+    // No hay registros vencidos
+    if (state.settings.purgeNotice) {
+      state.settings.purgeNotice = null;
+      store.set("clinlab.settings", state.settings);
+    }
+    renderPurgeNotice(null);
+  }
+
+  // Mantener los últimos 3 meses (activos) en la memoria principal de la interfaz
+  if (active.length > 0) {
     state.requests = active;
-    saveAll();
-    if (removed > 0 || archive.length > 0) {
-      console.log(`[Retención] Activos: ${active.length} | Archivados: ${archive.length} | Eliminados (>12m): ${removed}`);
+    saveLocalRequestsSegregated(active);
+  }
+}
+
+function renderPurgeNotice(noticeData) {
+  const banner = $("#purgeNoticeBanner");
+  if (!banner) return;
+
+  if (!noticeData || noticeData.count === 0) {
+    banner.style.display = "none";
+    return;
+  }
+
+  banner.style.display = "flex";
+  const daysEl = $("#purgeNoticeDays");
+  if (daysEl) daysEl.textContent = noticeData.daysRemaining;
+
+  const textEl = $("#purgeNoticeText");
+  if (textEl) {
+    textEl.innerHTML = `Se han detectado <strong>${noticeData.count} registros</strong> con más de 12 meses de antigüedad. Serán depurados automáticamente en <strong>${noticeData.daysRemaining} día(s)</strong> para mantener ligero el almacenamiento. Descargue su respaldo antes de la depuración.`;
+  }
+}
+
+async function downloadChronologicalBackup(format = "json") {
+  const yearVal = $("#chronoYearSelect")?.value || "";
+  const monthVal = $("#chronoMonthSelect")?.value || "";
+  const dayVal = $("#chronoDaySelect")?.value || "";
+
+  const allReqs = await requestsIDB.loadAll() || state.requests || [];
+  const filtered = allReqs.filter((req) => {
+    if (!req || !req.date) return false;
+    const { year, month, day } = parseChronologicalKey(req.date);
+    if (yearVal && year !== yearVal) return false;
+    if (monthVal && month !== monthVal) return false;
+    if (dayVal && day !== dayVal) return false;
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    toast("No se encontraron registros para el período seleccionado.");
+    return;
+  }
+
+  const periodLabel = `${yearVal || "Todos"}_${monthVal ? "Mes" + monthVal : "Todos"}_${dayVal ? "Dia" + dayVal : "Todos"}`;
+
+  if (format === "json") {
+    const payload = {
+      sistema: "ClinLab Suite",
+      version: "1.1.0-storage",
+      fecha_generacion: new Date().toISOString(),
+      filtro_cronologico: {
+        anio: yearVal || "todos",
+        mes: monthVal || "todos",
+        dia: dayVal || "todos"
+      },
+      total_registros: filtered.length,
+      registros_cronologicos: groupRequestsChronologically(filtered),
+      solicitudes: filtered
+    };
+
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `ClinLab_Respaldo_${periodLabel}_${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast(`Respaldo JSON descargado (${filtered.length} registros).`);
+  } else if (format === "excel") {
+    if (typeof XLSX === "undefined") {
+      toast("La librería de exportación Excel no está disponible.");
+      return;
+    }
+
+    const solRows = filtered.map((req) => ({
+      "Código": req.code || "",
+      "Fecha": req.date || "",
+      "Paciente": req.name || "",
+      "Edad": req.age || "",
+      "Género": req.gender || "",
+      "Asegurado": req.insuranceCode || "",
+      "Servicio": req.service || "",
+      "Médico": req.doctor || "",
+      "Cama": req.bed || "",
+      "Muestra": req.sampleStatus || "ACEPTADA",
+      "Total Pruebas": (req.tests || []).length
+    }));
+
+    const testRows = [];
+    filtered.forEach((req) => {
+      (req.tests || []).forEach((t) => {
+        testRows.push({
+          "Código Paciente": req.code || "",
+          "Fecha": req.date || "",
+          "Paciente": req.name || "",
+          "Área": t.area || "",
+          "Prueba / Parámetro": t.name || t.id || "",
+          "Resultado": t.result || "",
+          "Unidad": t.unit || "",
+          "Valores de Referencia": t.reference || "",
+          "Observaciones": t.notes || "",
+          "Estado": t.depurado ? "DEPURADO" : "ACTIVO"
+        });
+      });
+    });
+
+    const wb = XLSX.utils.book_new();
+    const ws1 = XLSX.utils.json_to_sheet(solRows);
+    const ws2 = XLSX.utils.json_to_sheet(testRows);
+    XLSX.utils.book_append_sheet(wb, ws1, "Solicitudes");
+    XLSX.utils.book_append_sheet(wb, ws2, "Resultados");
+
+    XLSX.writeFile(wb, `ClinLab_Export_${periodLabel}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    toast(`Exportación Excel completada (${filtered.length} registros).`);
+  }
+}
+
+async function downloadExpiredBackup() {
+  const allReqs = await requestsIDB.loadAll() || state.requests || [];
+  const nowDate = new Date();
+  nowDate.setHours(0, 0, 0, 0);
+  const nowMs = nowDate.getTime();
+  const MS_365 = 365 * 24 * 60 * 60 * 1000;
+
+  const expired = allReqs.filter((req) => {
+    if (!req || !req.date) return false;
+    const [y, m, d] = req.date.split("-").map(Number);
+    const reqMs = new Date(y, (m || 1) - 1, d || 1).getTime();
+    return (nowMs - reqMs) > MS_365;
+  });
+
+  if (expired.length === 0) {
+    toast("No hay registros vencidos para respaldar.");
+    return;
+  }
+
+  const payload = {
+    sistema: "ClinLab Suite",
+    tipo: "RESPALDO_REGISTROS_VENCIDOS_12M",
+    fecha_generacion: new Date().toISOString(),
+    total_registros: expired.length,
+    registros_cronologicos: groupRequestsChronologically(expired),
+    solicitudes: expired
+  };
+
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `ClinLab_Respaldo_Vencidos_12M_${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast(`Respaldo de registros vencidos descargado (${expired.length} registros).`);
+}
+
+async function downloadFullBackup() {
+  const allReqs = await requestsIDB.loadAll() || state.requests || [];
+  if (allReqs.length === 0) {
+    toast("No hay registros almacenados.");
+    return;
+  }
+
+  const payload = {
+    sistema: "ClinLab Suite",
+    version: "1.1.0-storage",
+    tipo: "RESPALDO_COMPLETO_12_MESES",
+    fecha_generacion: new Date().toISOString(),
+    total_registros: allReqs.length,
+    configuracion: state.settings,
+    catalogo: catalog,
+    registros_cronologicos: groupRequestsChronologically(allReqs),
+    solicitudes: allReqs
+  };
+
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `ClinLab_Respaldo_Completo_12M_${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast(`Respaldo completo descargado (${allReqs.length} registros).`);
+}
+
+async function renderChronologicalSelectors() {
+  const stats = await requestsIDB.getChronologicalTree();
+  if (!stats) return;
+
+  const totalEl = $("#chronoBadgeTotal");
+  const activeEl = $("#chronoBadgeActive");
+  const archiveEl = $("#chronoBadgeArchive");
+
+  if (totalEl) totalEl.textContent = `Total: ${stats.totalCount} registros`;
+  if (activeEl) activeEl.textContent = `Activos (≤3m): ${stats.activeCount}`;
+  if (archiveEl) archiveEl.textContent = `Históricos (4-12m): ${stats.archiveCount}`;
+
+  const yearSelect = $("#chronoYearSelect");
+  const monthSelect = $("#chronoMonthSelect");
+  const daySelect = $("#chronoDaySelect");
+
+  if (!yearSelect) return;
+
+  const prevYear = yearSelect.value;
+  const prevMonth = monthSelect?.value;
+  const prevDay = daySelect?.value;
+
+  const years = Object.keys(stats.tree || {});
+  yearSelect.innerHTML = `<option value="">Todos los años (${years.length})</option>` +
+    years.map((y) => `<option value="${y}" ${y === prevYear ? "selected" : ""}>Año ${y}</option>`).join("");
+
+  const selectedYear = yearSelect.value;
+  if (monthSelect) {
+    if (selectedYear && stats.tree[selectedYear]) {
+      const months = Object.keys(stats.tree[selectedYear]);
+      monthSelect.innerHTML = `<option value="">Todos los meses (${months.length})</option>` +
+        months.map((m) => `<option value="${m}" ${m === prevMonth ? "selected" : ""}>Mes ${m}</option>`).join("");
+    } else {
+      monthSelect.innerHTML = `<option value="">Todos los meses</option>`;
+    }
+  }
+
+  const selectedMonth = monthSelect?.value;
+  if (daySelect) {
+    if (selectedYear && selectedMonth && stats.tree[selectedYear]?.[selectedMonth]) {
+      const days = stats.tree[selectedYear][selectedMonth];
+      daySelect.innerHTML = `<option value="">Todos los días (${days.length})</option>` +
+        days.map((d) => `<option value="${d}" ${d === prevDay ? "selected" : ""}>Día ${d}</option>`).join("");
+    } else {
+      daySelect.innerHTML = `<option value="">Todos los días</option>`;
     }
   }
 }
@@ -1399,7 +1795,7 @@ async function init() {
     syncAllToExternalRegistry();
   }
   cleanupEmptyTests();
-  enforceRetentionPolicy(); // Aplicar política de retención al iniciar (migración retroactiva)
+  await enforceRetentionWithNotice(); // Aplicar política de retención de 12 meses con preaviso al iniciar
   if (bootstrap?.syncConfig?.link_carpeta && !state.settings.cloudUrl) state.settings.cloudUrl = bootstrap.syncConfig.link_carpeta;
   selectedArea = areas()[0] || "";
   // Statistics module enabled
@@ -1635,6 +2031,15 @@ function bindStorageControls() {
   $("#restoreWizardBtn")?.addEventListener("click", openRestoreWizard);
   $("#closeRestore")?.addEventListener("click", () => { if ($("#restoreModal")) $("#restoreModal").hidden = true; });
   $("#scanRestore")?.addEventListener("click", scanRestoreFiles);
+  
+  // Acciones de respaldo cronológico y depuración con preaviso
+  $("#downloadExpiredBackupBtn")?.addEventListener("click", downloadExpiredBackup);
+  $("#downloadAllBackupBtn")?.addEventListener("click", downloadFullBackup);
+  $("#downloadFullBackupBtn")?.addEventListener("click", downloadFullBackup);
+  $("#downloadChronoJsonBtn")?.addEventListener("click", () => downloadChronologicalBackup("json"));
+  $("#downloadChronoExcelBtn")?.addEventListener("click", () => downloadChronologicalBackup("excel"));
+  $("#chronoYearSelect")?.addEventListener("change", renderChronologicalSelectors);
+  $("#chronoMonthSelect")?.addEventListener("change", renderChronologicalSelectors);
   
   const selectSyncFolderBtn = $("#selectSyncFolderBtn");
   if (selectSyncFolderBtn) {
@@ -2161,6 +2566,7 @@ function renderAll() {
   }
   renderSettingsAccess();
   renderBackupStatus();
+  renderChronologicalSelectors();
   renderConnectedTerminals();
   renderRequiredSamples();
   applyTheme(state.settings.themeColor);
@@ -2524,6 +2930,7 @@ function requestFromForm() {
           area: area,
           determination: catalogDetermination(catalogItem) || existing?.determination || existing?.determinacion || "",
           parameter: catalogName(catalogItem) || existing?.parameter || existing?.parametro || existing?.name || "",
+          sample: catalogItem.muestra || existing?.sample || existing?.muestra || "",
           depurado: (existing?.depurado && !(existing?.result || existing?.notes)) || false
         };
       }
@@ -2971,15 +3378,26 @@ async function renderPatientRows() {
     if (patientSearchTimer) clearTimeout(patientSearchTimer);
     try {
       const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
-      const data = await res.json();
-      source = data;
-      searchResultsCache = data; // Keep for click handler
+      if (res.ok) {
+        const data = await res.json();
+        source = data;
+      } else {
+        throw new Error("Local backend search fallback");
+      }
+      searchResultsCache = source;
     } catch (e) {
-      console.error("Search error", e);
-      source = state.requests.filter(req => 
+      const activeMatches = (state.requests || []).filter(req => 
         (req.name && req.name.toLowerCase().includes(query)) ||
-        (req.code && req.code.toLowerCase().includes(query))
+        (req.code && req.code.toLowerCase().includes(query)) ||
+        (req.insuranceCode && req.insuranceCode.toLowerCase().includes(query)) ||
+        (req.date && req.date.includes(query))
       );
+      const idbMatches = await requestsIDB.search(query);
+      const map = new Map();
+      for (const r of [...activeMatches, ...idbMatches]) {
+        if (r && r.code) map.set(r.code, r);
+      }
+      source = Array.from(map.values());
       searchResultsCache = source;
     }
   } else {
@@ -5080,6 +5498,7 @@ function bindOutsourceControls() {
         state.settings.outsourceAreas.push(area);
         toast(`Área ${area} configurada para Envío Externo.`);
       }
+      syncAllToExternalRegistry();
       saveAll();
       renderAll();
     };
@@ -5137,6 +5556,11 @@ function bindOutsourceSubmenu() {
       el.addEventListener("input", renderOutsourceWorklist);
     }
   });
+
+  const printOutsourceBtn = $("#printOutsourceBtn");
+  if (printOutsourceBtn) {
+    printOutsourceBtn.onclick = () => window.print();
+  }
   
   ["epidemiologyDateFrom", "epidemiologyDateTo", "epidemiologyParameterSelect"].forEach(id => {
     const el = $(`#${id}`);
@@ -5151,24 +5575,46 @@ function outsourceRows() {
   const dateFrom = $("#outsourceDateFrom") ? $("#outsourceDateFrom").value : "";
   const dateTo = $("#outsourceDateTo") ? $("#outsourceDateTo").value : "";
   
+  const outsourceAreasSet = new Set(state.settings.outsourceAreas || []);
   const rows = [];
-  (state.externalList || []).forEach(extReq => {
-    const dateOk = (!dateFrom || extReq.date >= dateFrom) && (!dateTo || extReq.date <= dateTo);
+  
+  (state.requests || []).forEach(req => {
+    const dateOk = (!dateFrom || req.date >= dateFrom) && (!dateTo || req.date <= dateTo);
     if (!dateOk) return;
     
-    rows.push({
-      req: extReq,
-      tests: extReq.tests
+    const outsourcedTests = (req.tests || []).filter(test => {
+      if (test.depurado) return false;
+      const catalogItem = catalog.find(c => c.id === test.id) || {};
+      const area = catalogItem.area || test.area || "";
+      return outsourceAreasSet.has(area);
+    }).map(test => {
+      const catalogItem = catalog.find(c => c.id === test.id) || {};
+      return {
+        id: test.id,
+        area: catalogItem.area || test.area || "Desconocida",
+        determination: catalogDetermination(catalogItem) || test.determination || test.determinacion || "Desconocida",
+        parameter: catalogName(catalogItem) || test.parameter || test.parametro || test.name || test.id,
+        sample: catalogItem.muestra || test.sample || test.muestra || "---",
+        notes: test.notes || test.observaciones || ""
+      };
     });
+    
+    if (outsourcedTests.length > 0) {
+      rows.push({
+        req,
+        tests: outsourcedTests
+      });
+    }
   });
   
   return rows.sort((a, b) => b.req.date.localeCompare(a.req.date));
 }
 
 const outsourceTestKey = (test) => {
-  const area = test.area || "Desconocida";
-  const det = test.determination || test.determinacion || "Desconocida";
-  const param = test.parameter || test.parametro || test.name || "Desconocido";
+  const catalogItem = catalog.find(c => c.id === test.id) || {};
+  const area = test.area || catalogItem.area || "Desconocida";
+  const det = test.determination || test.determinacion || catalogDetermination(catalogItem) || "Desconocida";
+  const param = test.parameter || test.parametro || test.name || catalogName(catalogItem) || "Desconocido";
   return `${area} - ${det} - ${param}`;
 };
 

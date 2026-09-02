@@ -2128,3 +2128,162 @@ tr.dragging {
 .floating-sync-notify .notify-close:hover {
   color: #78350f;
 }
+
+/* ==========================================================================
+   SISTEMA DE ALMACENAMIENTO CRONOLÓGICO Y PREAVISO DE RETENCIÓN (12 MESES)
+   ========================================================================== */
+
+.purge-notice-banner {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border: 1px solid #f59e0b;
+  border-radius: 12px;
+  padding: 12px 18px;
+  margin: 12px 20px 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.15);
+  animation: slideInDown 0.3s ease-out;
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.purge-notice-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.purge-notice-icon {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.purge-notice-body strong {
+  display: block;
+  color: #92400e;
+  font-size: 0.95rem;
+  margin-bottom: 2px;
+}
+
+.purge-notice-body p {
+  margin: 0;
+  color: #78350f;
+  font-size: 0.85rem;
+  line-height: 1.35;
+}
+
+.purge-notice-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.purge-btn-download {
+  background: #d97706;
+  color: #fff !important;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.purge-btn-download:hover {
+  background: #b45309;
+  transform: translateY(-1px);
+}
+
+.purge-btn-secondary {
+  background: #fff;
+  color: #92400e;
+  border: 1px solid #d97706;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.purge-btn-secondary:hover {
+  background: #fef3c7;
+}
+
+/* Chronological Backup Selectors & Badges */
+.chrono-selectors-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.chrono-selectors-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.chrono-selectors-grid select {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: #fff;
+  font-size: 0.88rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.chrono-selectors-grid select:focus {
+  border-color: var(--teal);
+}
+
+.chrono-stats-badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chrono-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.chrono-badge.active-badge {
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+
+.chrono-badge.archive-badge {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+}
+
+.chrono-badge.total-badge {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+

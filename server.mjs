@@ -77,29 +77,50 @@ async function archiveOldRecords() {
     date12Months.setMonth(date12Months.getMonth() - 12);
     const str12M = date12Months.toISOString().slice(0, 10);
     
-    // Si existen registros previamente movidos a JSON, restaurarlos a la BD activa si < 12 meses
-    const archiveFile = join(appDataRoot, "archivos_lectura", "archived_records.json");
-    if (existsSync(archiveFile)) {
-      try {
-        const archivedData = JSON.parse(await readFile(archiveFile, "utf8"));
-        const insertReport = db.prepare("INSERT OR REPLACE INTO reportes (codigo, fecha, payload, updated_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP)");
-        const insertPatient = db.prepare("INSERT OR REPLACE INTO pacientes (codigo, fecha, nombre, payload, updated_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)");
-        for (const req of archivedData) {
-          if (req.date && req.date >= str12M) {
-            insertReport.run(req.code, req.date, JSON.stringify(req));
-            insertPatient.run(req.code, req.date, req.name, JSON.stringify(req));
-          }
-        }
-      } catch (e) {
-        console.error("Error al restaurar registros archivados:", e);
+    // Contar registros vencidos (> 12 meses)
+    const expiredCount = db.prepare("SELECT COUNT(*) as count FROM pacientes WHERE fecha < ?").get(str12M)?.count || 0;
+    
+    if (expiredCount > 0) {
+      const noticePath = configPath("purge_notice.json");
+      let notice = await readJson(noticePath, null);
+      if (!notice || !notice.firstNotified) {
+        notice = {
+          firstNotified: new Date().toISOString(),
+          count: expiredCount,
+          cutoff: str12M
+        };
+        await writeJson(noticePath, notice);
+        await logEvent("WARN", "RETENCION", `Preaviso de depuración iniciado: ${expiredCount} registros mayores a 12 meses.`);
+      }
+
+      const elapsedMs = Date.now() - new Date(notice.firstNotified).getTime();
+      const elapsedDays = Math.floor(elapsedMs / (1000 * 60 * 60 * 24));
+
+      if (elapsedDays >= 7) {
+        // Respaldar antes de depurar
+        const expiredRecords = db.prepare("SELECT payload FROM reportes WHERE fecha < ?").all(str12M).map(r => JSON.parse(r.payload));
+        const archiveDir = join(appDataRoot, "archivos_lectura");
+        await mkdir(archiveDir, { recursive: true });
+        const purgeBackupFile = join(archiveDir, `backup_depurados_${Date.now()}.json`);
+        await writeFile(purgeBackupFile, JSON.stringify(expiredRecords, null, 2), "utf8");
+
+        // Ejecutar eliminación tras cumplirse los 7 días
+        db.prepare("DELETE FROM examenes WHERE paciente_codigo IN (SELECT codigo FROM pacientes WHERE fecha < ?)").run(str12M);
+        db.prepare("DELETE FROM resultados WHERE paciente_codigo IN (SELECT codigo FROM pacientes WHERE fecha < ?)").run(str12M);
+        db.prepare("DELETE FROM pacientes WHERE fecha < ?").run(str12M);
+        db.prepare("DELETE FROM reportes WHERE fecha < ?").run(str12M);
+        
+        await unlink(noticePath).catch(() => {});
+        await logEvent("INFO", "RETENCION", `Depuración automática completada: ${expiredCount} registros eliminados tras 7 días de preaviso.`);
+      } else {
+        await logEvent("INFO", "RETENCION", `Período de preaviso activo (${7 - elapsedDays} días restantes para depurar ${expiredCount} registros).`);
+      }
+    } else {
+      const noticePath = configPath("purge_notice.json");
+      if (existsSync(noticePath)) {
+        await unlink(noticePath).catch(() => {});
       }
     }
-
-    // Eliminar registros mayores a 12 meses de inactividad
-    db.prepare("DELETE FROM examenes WHERE paciente_codigo IN (SELECT codigo FROM pacientes WHERE fecha < ?)").run(str12M);
-    db.prepare("DELETE FROM resultados WHERE paciente_codigo IN (SELECT codigo FROM pacientes WHERE fecha < ?)").run(str12M);
-    db.prepare("DELETE FROM pacientes WHERE fecha < ?").run(str12M);
-    db.prepare("DELETE FROM reportes WHERE fecha < ?").run(str12M);
     
     db.close();
   } catch (err) {
