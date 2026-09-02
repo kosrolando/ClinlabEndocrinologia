@@ -1,0 +1,11 @@
+{
+  "name": "clinlab-suite",
+  "version": "1.1.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "check": "node --check server.mjs && node --check app.js",
+    "serve": "node server.mjs"
+  }
+}

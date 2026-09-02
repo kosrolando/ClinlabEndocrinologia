@@ -1,0 +1,16 @@
+ClinLab Suite - Instalacion en otra terminal
+
+1. Descomprima la carpeta ClinLab Suite en la computadora destino.
+2. Instale Node.js LTS si la terminal no lo tiene instalado:
+   https://nodejs.org
+3. Ejecute INICIAR_CLINLAB.bat.
+4. Abra el sistema en:
+   http://localhost:4244
+5. Para crear acceso directo en el escritorio, haga clic derecho sobre
+   INSTALAR_ACCESO_DIRECTO.ps1 y seleccione "Ejecutar con PowerShell".
+
+Notas:
+- Los datos se guardan en AppData/LaboratorioSistema con SQLite anual.
+- Configure el enlace online obligatorio en Configuracion.
+- Exporte y registre respaldo online al menos cada dos meses.
+- Para mover datos entre terminales, use exportaciones, respaldo online o el asistente de restauracion.

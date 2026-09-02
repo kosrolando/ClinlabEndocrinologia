@@ -1,0 +1,6 @@
+openpyxl
+google-api-python-client
+google-auth-oauthlib
+msal
+requests
+schedule

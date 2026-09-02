@@ -1,0 +1,16 @@
+{
+  "name": "ClinLab Suite",
+  "short_name": "ClinLab",
+  "description": "Sistema de gestion para laboratorios clinicos",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f6f8fb",
+  "theme_color": "#1f7a4d",
+  "icons": [
+    {
+      "src": "assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

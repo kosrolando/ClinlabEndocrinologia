@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="es" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#1f7a4d" />
+    <title>ClinLab Suite</title>
+    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" href="assets/icon.svg" />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css?v=28" />
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+  </head>
+  <body>
+    <aside class="sidebar">
+      <div class="brand">
+        <img id="brandLogo" src="assets/icon.svg" alt="" />
+        <div>
+          <strong>ClinLab Suite</strong>
+        </div>
+      </div>
+      <nav id="nav">
+        <button class="active" data-view="dashboard">Panel</button>
+        <button data-view="patients">Pacientes</button>
+        <button data-view="worklist">Listas</button>
+        <button data-view="reports">Reportes</button>
+        <button data-view="statistics">Estadisticas</button>
+        <button data-view="catalog">Catalogo</button>
+        <button data-view="settings">Configuracion</button>
+      </nav>
+      <button id="installBtn" class="install" hidden>Instalar app</button>
+    </aside>
+
+    <main>
+      <!-- Header Banner -->
+
+      <header class="topbar">
+        <div>
+          <p id="labLabel">Laboratorio clinico</p>
+          <h1 id="viewTitle">Panel</h1>
+        </div>
+        <div class="actions">
+          <button id="printBtn">Imprimir</button>
+        </div>
+      </header>
+
+      <section id="dashboard" class="view active">
+        <div class="metrics">
+          <article><span>Solicitudes</span><strong id="metricRequests">0</strong></article>
+          <article><span>Pruebas activas</span><strong id="metricTests">0</strong></article>
+          <article><span>Pacientes hoy</span><strong id="metricToday">0</strong></article>
+          <article><span>Pendientes</span><strong id="metricPending">0</strong></article>
+        </div>
+        <div class="grid two">
+          <section class="panel">
+            <h2>Actividad por fecha</h2>
+            <div id="dateStats" class="barList"></div>
+          </section>
+          <section class="panel">
+            <h2>Pruebas mas solicitadas</h2>
+            <div id="testStats" class="barList"></div>
+          </section>
+        </div>
+        <section class="systemCredit">
+          Sistema creado por <strong>RoOo.Solutions</strong> - <span>bios.rolando@gmail.com</span>
+        </section>
+      </section>
+
+      <section id="patients" class="view">
+        <div class="grid patientGrid">
+          <form id="patientForm" class="panel">
+            <h2>Solicitud medica</h2>
+            <div id="formProgressContainer" style="margin-bottom: 15px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                <span style="font-size: 0.85em; color: var(--muted); font-weight: 600;">Progreso de datos obligatorios</span>
+                <span id="formProgressText" style="font-size: 0.85em; color: var(--teal); font-weight: bold;">0%</span>
+              </div>
+              <div style="width: 100%; height: 8px; background: var(--teal-2); border-radius: 4px; overflow: hidden;">
+                <div id="formProgressBar" style="width: 0%; height: 100%; background: var(--teal); transition: width 0.3s ease;"></div>
+              </div>
+            </div>
+            <div id="purgedWarningBanner" style="display: none; background: #fee2e2; border: 1px solid #fca5a5; color: #b91c1c; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 0.9em; font-weight: 600;">⚠️ Esta solicitud contiene pruebas depuradas por inactividad.</div>
+            <div class="patient-form-5col">
+              <div class="patient-inputs-4col">
+                <div class="formGrid formGrid-4">
+                  <div class="formSubtitle">Datos del paciente</div>
+                  <label>Nombres y apellidos<input name="name" required /></label>
+                  <label>Edad<input name="age" inputmode="numeric" pattern="[0-9]{1,3}" required /></label>
+                  <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <span style="color: var(--muted); ">Genero</span>
+                    <div class="gender-btn-group">
+                      <button type="button" class="gender-btn" data-gender="MASCULINO">Masculino</button>
+                      <button type="button" class="gender-btn" data-gender="FEMENINO">Femenino</button>
+                      <input type="hidden" name="gender" id="patientGender" required />
+                    </div>
+                  </div>
+                  <label>Codigo de asegurado<input name="insuranceCode" maxlength="12" /></label>
+
+                  <div class="formSubtitle">Datos del servicio</div>
+                  <label>Servicio - Consultorio medico<input name="service" required /></label>
+                  <label>Medico solicitante<input name="doctor" required /></label>
+                  <label>Numero de cama<input name="bed" /></label>
+
+                  <div class="formSubtitle">Identificador de Solicitud - Muestra</div>
+                  <label>Codigo de toma de muestra<input name="auxCode" required /></label>
+                  <label>Fecha<input name="date" type="date" required /></label>
+                  <div style="grid-column: 1 / -1; margin-top: 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div>
+                      <span style="color: var(--muted);  font-weight: bold;">Muestras requeridas:</span>
+                      <div id="requiredSamplesList" style="margin-top: 4px; padding: 8px 10px; background: var(--teal-2); color: var(--teal); border-radius: 6px;  font-weight: bold; min-height: 36px; display: flex; align-items: center; border: 1px solid #cceade;">Ninguna prueba seleccionada</div>
+                    </div>
+                    <div>
+                      <span style="color: var(--muted);  font-weight: bold;">Estado de la muestra:</span>
+                      <div class="sample-status-group" style="margin-top: 4px; display: flex; gap: 8px; min-height: 36px;">
+                        <button type="button" class="status-btn active" data-status="ACEPTADO" style="flex: 1; padding: 8px; border-radius: 6px;  font-weight: 600; cursor: pointer; transition: all 0.2s;">Aceptado</button>
+                        <button type="button" class="status-btn" data-status="RECHAZADO" style="flex: 1; padding: 8px; border-radius: 6px;  font-weight: 600; cursor: pointer; transition: all 0.2s;">Rechazado</button>
+                        <input type="hidden" name="sampleStatus" id="sampleStatus" value="ACEPTADO" />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div style="grid-column: 1 / -1; margin-top: 8px; display: flex; flex-direction: column; gap: 6px;">
+                    <span style="color: var(--muted); font-weight: bold;">Tipo de atencion</span>
+                    <div class="attention-btn-group" style="display: flex; gap: 8px;">
+                      <button type="button" class="attention-btn" data-attention="Rutina" style="flex: 1; padding: 8px; border-radius: 6px; border: 1px solid var(--line); background: white; cursor: pointer; font-weight: 600; transition: all 0.2s;">Rutina</button>
+                      <button type="button" class="attention-btn" data-attention="Emergencias" style="flex: 1; padding: 8px; border-radius: 6px; border: 1px solid var(--line); background: white; cursor: pointer; font-weight: 600; transition: all 0.2s;">Emergencias</button>
+                      <input type="hidden" name="attentionType" id="attentionType" required />
+                    </div>
+                  </div>
+
+                  <div class="formSubtitle">Diagnostico</div>
+                  <label style="grid-column: 1 / -1;">
+                    Diagnostico(s)
+                    <input name="diagnosis" id="patientDiagnosis" list="diagnosisSuggestions" placeholder="Escriba el o los diagnósticos" autocomplete="off" required />
+                  </label>
+                  <datalist id="diagnosisSuggestions"></datalist>
+
+                  <div class="formSubtitle">Codigo unico de Registro</div>
+                  <label>Codigo<input name="code" readonly /></label>
+                </div>
+                <div class="formActions">
+                  <button type="submit">Guardar solicitud</button>
+                  <button type="button" id="editPatient">Editar</button>
+                  <button type="button" id="deletePatient">Borrar</button>
+                  <button type="button" id="clearPatient">Limpiar</button>
+                </div>
+              </div>
+              <div class="patient-history-1col" style="display: flex; flex-direction: column; max-height: 520px;">
+                <div class="patient-search-container" style="margin-bottom: 8px;">
+                  <input id="patientSearchInput" placeholder="Buscar paciente por nombre o código..." style="width: 100%; padding: 8px; border: 1px solid var(--line); border-radius: 4px;" />
+                </div>
+                <div class="miniTable" style="margin-top: 0; max-height: 460px; overflow-y: auto; border: 1px solid var(--line); border-radius: 8px;">
+                  <table>
+                    <thead style="position: sticky; top: 0; background: #f8fafc; z-index: 2; box-shadow: 0 1px 2px rgba(0,0,0,0.05);"><tr><th>Codigo</th><th>Paciente</th><th>Fecha</th></tr></thead>
+                    <tbody id="patientRows"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </form>
+          <section class="panel">
+            <h2>Asignacion de pruebas</h2>
+            <div class="asignacion-grid">
+              <div class="asignacion-menu">
+                <input id="testSearch" class="search" placeholder="Buscar prueba, codigo o area" />
+                <div id="areaTabs" class="tabs"></div>
+                <div id="testTree" class="testTree"></div>
+              </div>
+              <div class="asignacion-assigned">
+                <div id="assignedBlocksContainer"></div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section id="catalog" class="view">
+        <section class="panel" style="margin-bottom: 20px;">
+          <h2>Áreas - Compras de Servicios (Envío de Muestras)</h2>
+          <p style="color: var(--muted); font-size: 0.9rem; margin-bottom: 12px;">
+            Seleccione las áreas destinadas únicamente al envío de muestras a otros laboratorios externos. Estas áreas se ocultarán de los reportes y estadísticas internas.
+          </p>
+          <div id="outsourceAreasContainer" class="outsource-grid">
+            <!-- Rendered by JS -->
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panelHead">
+            <h2>Catalogo maestro</h2>
+            <div class="filters">
+              <input id="catalogSearch" placeholder="Buscar" />
+              <select id="catalogArea"></select>
+
+              <button id="addTest">Nueva prueba</button>
+              <input type="file" id="importExcel" accept=".xlsx, .xls" hidden />
+              <button id="importCatalogBtn">Importar Excel</button>
+              <button id="saveCatalog">Guardar cambios</button>
+            </div>
+          </div>
+          <p id="catalogGuide" class="guideLine"></p>
+          <div class="tableWrap">
+            <table>
+              <thead><tr><th style="width: 40px"></th><th>Area</th><th>Determinacion</th><th>Clasificacion</th><th>Parametro</th><th>Tipo</th><th>Muestra</th><th>Unidad</th><th>Minimo</th><th>Maximo</th><th>Referencia</th><th>Activo</th><th>Menu</th></tr></thead>
+              <tbody id="catalogRows"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <section id="worklist" class="view">
+        <div class="tabs noPrint" id="worklistSubmenu" style="margin-bottom: 15px; border-bottom: 1px solid var(--line); padding-bottom: 8px; display: flex; gap: 8px;">
+          <button type="button" class="active" id="subviewWorklistBtn" style="font-weight: 600;">Lista de Trabajo Interna</button>
+          <button type="button" id="subviewOutsourceBtn" style="font-weight: 600;">Envío de Muestras Externas</button>
+          <button type="button" id="subviewEpidemiologyBtn" style="font-weight: 600;">Lista Epidemiológica por Prueba</button>
+        </div>
+
+        <div id="internalWorklistPanel">
+          <section class="panel">
+            <div class="panelHead">
+              <h2>Lista de trabajo</h2>
+              <div class="filters">
+                <div class="filter-col">
+                  <input id="workDateFrom" type="date" title="Desde fecha" />
+                  <input id="workDateTo" type="date" title="Hasta fecha" />
+                </div>
+                <div class="filter-col">
+                  <select id="workArea"></select>
+                  <select id="workAreaExclude"></select>
+                </div>
+                <div class="filter-col">
+                  <input id="workTestFilter" placeholder="Prueba" />
+                  <input id="workPatientFilter" placeholder="Paciente" />
+                  <select id="workGroup">
+                    <option value="date">Agrupar por fecha</option>
+                    <option value="code">Agrupar por codigo</option>
+                    <option value="name">Agrupar por nombre</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div id="workRows" class="worklistContainer"></div>
+          </section>
+        </div>
+
+        <div id="outsourceWorklistPanel" hidden>
+          <section class="panel">
+            <div id="outsourcePrintHeader"></div>
+            <div class="panelHead noPrint">
+              <h2>Listas para envío de muestras</h2>
+              <div class="filters">
+                <div class="filter-col">
+                  <input id="outsourceDateFrom" type="date" title="Desde fecha" />
+                  <input id="outsourceDateTo" type="date" title="Hasta fecha" />
+                </div>
+              </div>
+            </div>
+            <div id="outsourceFilterContainer" class="noPrint"></div>
+            <div id="outsourceRowsContainer" class="worklistContainer"></div>
+          </section>
+        </div>
+
+        <div id="epidemiologyWorklistPanel" hidden>
+          <section class="panel">
+            <div id="epidemiologyPrintHeader"></div>
+            <div class="panelHead noPrint">
+              <h2>Lista epidemiológica por prueba</h2>
+              <div class="filters">
+                <div class="filter-col">
+                  <input id="epidemiologyDateFrom" type="date" title="Desde fecha" />
+                  <input id="epidemiologyDateTo" type="date" title="Hasta fecha" />
+                </div>
+                <div class="filter-col">
+                  <select id="epidemiologyParameterSelect" style="max-width: 550px; width: 100%;">
+                    <option value="">Seleccione un parámetro...</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div id="epidemiologyRowsContainer" class="worklistContainer"></div>
+          </section>
+        </div>
+      </section>
+
+      <section id="reports" class="view">
+        <section class="panel">
+          <div class="panelHead noPrint">
+            <h2>Busqueda y reportes</h2>
+            <div class="filters">
+              <input id="reportSearch" placeholder="Codigo, paciente, medico o fecha" />
+              <input id="reportDate" type="date" />
+              <button id="printSelectedReport">Imprimir busqueda</button>
+              <button id="printDateReports">Imprimir fecha</button>
+            </div>
+          </div>
+          <div id="reportList" class="reportList"></div>
+        </section>
+      </section>
+
+      <section id="statistics" class="view" hidden>
+        <section class="panel">
+          <div id="statsPrintHeader"></div>
+          <div class="panelHead" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px;">
+            <div>
+              <h2>Panel de Control y Estadísticas</h2>
+              <p style="color: var(--muted); font-size: 0.9rem;">Producción general, calidad y reportes epidemiológicos.</p>
+            </div>
+            <div class="filters">
+              <input id="statsFrom" type="date" title="Desde la fecha" />
+              <input id="statsTo" type="date" title="Hasta la fecha" />
+              <button id="exportStatsExcel" style="background: #10b981; color: white; border: none; cursor: pointer; padding: 0 15px; border-radius: 6px; font-weight: bold; display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 36px; transition: background 0.2s;" title="Exportar Estadísticas a Excel">Exportar Excel</button>
+            </div>
+          </div>
+          
+          <h3 style="margin-top: 20px; border-bottom: 1px solid var(--line); padding-bottom: 5px;">Producción General y Calidad</h3>
+          <div class="metrics compactMetrics" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 20px;">
+            <article><span>Total Pacientes</span><strong id="kpiPacientes">0</strong></article>
+            <article><span>Total Muestras</span><strong id="kpiMuestras">0</strong></article>
+            <article><span>Pruebas Realizadas</span><strong id="kpiPruebas">0</strong></article>
+            <article><span>Pruebas / Muestra</span><strong id="kpiPruebasMuestra">0.0</strong></article>
+            <article><span>Pruebas / Paciente</span><strong id="kpiPruebasPaciente">0.0</strong></article>
+            <article><span>Pruebas Emergencia</span><strong id="kpiEmergencia">0%</strong></article>
+            <article><span>Pruebas Género</span><strong id="kpiGenero">M: 0% | F: 0%</strong></article>
+            <article><span>Días Trabajados</span><strong id="kpiDias">0</strong></article>
+            <article><span>Producción Diaria</span><strong id="kpiProdDiaria">0</strong></article>
+            <article><span>Variación Mensual</span><strong id="kpiVariacion">0%</strong></article>
+            <article id="kpiRechazosCard" style="transition: background 0.3s;"><span>Tasa Rechazos</span><strong id="kpiRechazos">0%</strong></article>
+          </div>
+
+          <h3 style="margin-top: 20px; border-bottom: 1px solid var(--line); padding-bottom: 5px;">Envío de Muestras Externas (Derivación)</h3>
+          <div class="metrics compactMetrics" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 20px;">
+            <article><span>Pacientes Atendidos</span><strong id="kpiExtPacientes">0</strong></article>
+            <article><span>Muestras Generadas</span><strong id="kpiExtMuestras">0</strong></article>
+            <article><span>Asignaciones de Producción</span><strong id="kpiExtAsignaciones">0</strong></article>
+            <article><span>Parámetros Almacenados</span><strong id="kpiExtParametros">0</strong></article>
+          </div>
+          <div id="extElementsContainer" style="margin-bottom: 20px;"></div>
+
+          <h3 style="margin-top: 20px; border-bottom: 1px solid var(--line); padding-bottom: 5px;">Distribución Epidemiológica y Jerarquía de Áreas</h3>
+          <div id="statsComplexTables" style="margin-top: 15px; display: grid; grid-template-columns: 1fr; gap: 20px;">
+            <!-- Rendered by JS -->
+          </div>
+        </section>
+      </section>
+
+      <section id="settings" class="view">
+        <section class="panel settingsAccess">
+          <div class="panelHead">
+            <h2>Acceso administrativo</h2>
+            <span id="settingsLockState" class="statusPill">Bloqueado</span>
+          </div>
+          <div class="formGrid">
+            <label>Usuario administrador<input id="adminUser" autocomplete="username" /></label>
+            <label>Contrasena<input id="adminPassword" type="password" autocomplete="current-password" /></label>
+          </div>
+          <div class="formActions">
+            <button type="button" id="unlockSettings">Desbloquear configuracion</button>
+            <button type="button" id="lockSettings">Bloquear</button>
+          </div>
+          <p class="note">Este acceso protege los cambios institucionales, almacenamiento online y registro de respaldos.</p>
+        </section>
+        <div class="grid two">
+          <form id="institutionForm" class="panel adminOnly">
+            <h2>Identidad institucional</h2>
+            <label>Institucion<input name="institution" /></label>
+            <label>Establecimiento de Salud<input name="healthFacility" /></label>
+            <label>Nombre del laboratorio<input name="lab" /></label>
+            <label>Areas de laboratorio<input name="labAreas" placeholder="Hematologia, Quimica Sanguinea..." /></label>
+            <label>Direccion<input name="address" /></label>
+            <label>Telefono<input name="phone" /></label>
+            <label>Logo institucional<input name="logo" type="file" accept="image/*" /></label>
+            <img id="logoPreview" class="logoPreview" alt="" />
+            <label>Color de contraste (Tema)<input name="themeColor" type="color" value="#1f7a4d" /></label>
+            <button type="submit">Guardar identidad</button>
+          </form>
+          <div style="display: flex; flex-direction: column; gap: 20px;">
+            <form id="storageForm" class="panel adminOnly">
+              <h2>Almacenamiento</h2>
+              <label>Enlace obligatorio Google Drive / OneDrive<input name="cloudUrl" placeholder="https://..." /></label>
+              <label>Proveedor de nube<select name="cloudProvider"><option value="googledrive">Google Drive</option><option value="onedrive">OneDrive</option></select></label>
+              <label>Token/API OAuth local<input name="token_api" placeholder="Opcional para integracion API" /></label>
+              <button type="submit">Guardar almacenamiento</button>
+              <div id="localFolderSyncSection" style="display: none; flex-direction: column; gap: 10px; border-top: 1px dashed var(--line); padding-top: 12px; margin-top: 12px;">
+                <label style="font-weight: 600; color: var(--teal);">Modo Web App (Vercel) - Carpeta en la Nube</label>
+                <p style="margin: 0; font-size: 0.8rem; color: var(--muted);">Para sincronizar con su Google Drive o OneDrive en esta computadora, vincule la carpeta local que sincroniza a la nube.</p>
+                <button type="button" id="selectSyncFolderBtn" style="background: var(--teal); color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;">📁 Vincular Carpeta de la Nube</button>
+                <p id="syncFolderStatusText" style="font-size: 0.85rem; color: var(--muted); margin: 0; font-weight: 500;"></p>
+                <button type="button" id="restoreFolderAccessBtn" style="display: none; background: #eab308; color: black; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%;">🔑 Restaurar Permiso de Acceso</button>
+              </div>
+              <div id="backupStatus" class="backupStatus"></div>
+            </form>
+            <!-- collabForm removed -->
+            <div class="panel">
+              <div class="exportBox">
+                <h2>Exportar datos a Excel</h2>
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                  <label style="flex: 1;">Fecha inicial<input id="exportDateFrom" type="date" /></label>
+                  <label style="flex: 1;">Fecha final<input id="exportDateTo" type="date" /></label>
+                </div>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                  <button type="button" id="refreshSystem">Actualizar y refrescar sistema</button>
+                  <button type="button" id="exportExcel">Exportar tablas Excel</button>
+                </div>
+              </div>
+              <div class="backupWindow" style="margin-top: 20px;">
+                <h2>Historial de respaldos</h2>
+                <div id="backupHistory" class="backupHistory"></div>
+              </div>
+              <p class="note" style="margin-top: 10px;">La exportacion genera un archivo compatible con Excel. El respaldo online debe realizarse al menos cada dos meses usando el enlace configurado.</p>
+            </div>
+            <div class="panel adminOnly exportBox">
+              <h2>Administracion tecnica</h2>
+              <!-- license/sync buttons removed -->
+            </div>
+            <div class="panel adminOnly exportBox" style="border-color: #fca5a5;">
+              <h2 style="color: #dc2626;">Zona de Peligro</h2>
+              <button type="button" id="factoryReset" style="background: #ef4444; color: white; border: none; padding: 10px; border-radius: 6px; width: 100%; cursor: pointer;">Restablecer Sistema (Borrar Todo)</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div id="toast" class="toast" hidden></div>
+    <dialog id="welcomeModal" class="premium-modal">
+      <div class="welcome-content">
+        <h2 class="welcome-title">Sistema para la gestión de registros, reportes y datos estadísticos en laboratorios</h2>
+        <div class="welcome-divider"></div>
+        <div class="welcome-branding">
+          <p class="brand-name">RoOo.Solutions</p>
+          <p class="brand-email">bios.rolando@gmail.com</p>
+          <p class="brand-phone">Contacto: +591 77775843</p>
+        </div>
+        <div class="welcome-status">
+          <p>Días disponibles hasta actualización:</p>
+          <strong id="welcomeDaysRemaining">--</strong>
+        </div>
+        <button id="welcomeEnterBtn" class="premium-btn">Ingresar al Sistema</button>
+      </div>
+    </dialog>
+    <div id="appDialog" class="modalOverlay appDialogOverlay" hidden>
+      <section class="modalBox appDialogBox" role="dialog" aria-modal="true" aria-labelledby="appDialogTitle">
+        <div class="appDialogHead">
+          <span class="appDialogIcon" data-variant="info">i</span>
+          <div>
+            <h2 id="appDialogTitle">ClinLab Suite</h2>
+            <p id="appDialogMessage"></p>
+          </div>
+        </div>
+        <div class="formActions appDialogActions">
+          <button type="button" id="appDialogCancel">Cancelar</button>
+          <button type="button" id="appDialogConfirm">Aceptar</button>
+        </div>
+      </section>
+    </div>
+    <div id="licenseModal" class="modalOverlay" hidden>
+      <section class="modalBox">
+        <h2 id="licenseTitle"></h2>
+        <p id="licenseMessage"></p>
+        <div id="technicianContact" class="technicianContact"></div>
+        <label id="renewTokenField" hidden>Codigo de renovacion<input id="renewTokenInput" /></label>
+        <div class="formActions">
+          <button type="button" id="licenseOk">Entendido</button>
+          <button type="button" id="renewTokenBtn" hidden>Ingresar codigo de renovacion</button>
+          <button type="button" id="consultOnlyBtn" hidden>Solo consultar datos</button>
+        </div>
+      </section>
+    </div>
+    <div id="restoreModal" class="modalOverlay" hidden>
+      <section class="modalBox wide">
+        <h2>Restaurar datos desde nube</h2>
+        <div id="restoreSteps"></div>
+        <div class="formActions">
+          <button type="button" id="scanRestore">Conectar y escanear</button>
+          <button type="button" id="closeRestore">Cerrar</button>
+        </div>
+      </section>
+    </div>
+    <div id="confirmSaveModal" class="modalOverlay" hidden>
+      <section class="modalBox wide confirm-save-modal-box">
+        <h2 id="confirmSaveTitle" style="color: var(--teal); margin: 0; font-weight: 700;">Confirmar Registro</h2>
+        <div id="confirmSaveContent"></div>
+        <div class="formActions" style="margin-top: 16px;">
+          <button type="button" id="confirmSaveCancel">Cancelar</button>
+          <button type="button" id="confirmSaveBtn">Confirmar y Cerrar</button>
+          <button type="button" id="confirmSaveReportBtn" style="background-color: var(--teal); color: white;">Reportar</button>
+          <button type="button" id="confirmSavePrintBtn" style="background-color: #10b981; color: white;" hidden>Guardar e Imprimir</button>
+        </div>
+      </section>
+    </div>
+    <script type="module" src="app.js?v=32"></script>
+  </body>
+</html>
