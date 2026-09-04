@@ -1,61 +1,58 @@
 # Guía de Despliegue en GitHub y Vercel - ClinLab Suite
 
-## 1. Preparación para GitHub
+## 1. Despliegue en GitHub
 
-Para subir el proyecto a un repositorio remoto de GitHub:
+El repositorio remoto configurado es:
+`https://github.com/kosrolando/ClinlabEndocrinologia.git`
 
-### Opción A (Script automático):
-Ejecutar el archivo `PREPARAR_GITHUB.bat` en la raíz del proyecto.
+### Pasos para sincronizar cambios con GitHub:
 
-### Opción B (Comandos manuales en PowerShell/CMD):
+1. Abrir una terminal en la carpeta del proyecto (o ejecutar `PREPARAR_GITHUB.bat`).
+2. Ejecutar los comandos:
 ```powershell
-git init
 git add .
-git commit -m "v1.1.0 - Codigos AAAAMMDDHHMMSS sin colision + impresion PDF vectorial optimizada"
-git branch -M main
-git remote add origin https://github.com/TU_USUARIO/TU_REPOSITORIO.git
-git push -u origin main
+git commit -m "v1.2.0 - Actualizacion y preparacion completa para despliegue en GitHub y Vercel"
+git push origin main
 ```
 
-> **Nota:** El archivo `.gitignore` ya incluye las exclusiones de datos personales, bases de datos locales (`*.db`), exportaciones Excel y registros temporales.
+> **Nota:** El archivo `.gitignore` ya excluye automáticamente cualquier dato operativo, bases de datos `.db`, exportaciones Excel/ZIP y registros locales.
 
 ---
 
-## 2. Publicación en Vercel (Frontend Web App)
+## 2. Despliegue en Vercel (Frontend / PWA Web)
 
-Para desplegar la interfaz web en **Vercel**:
+La aplicación está 100% optimizada para correr en **Vercel** como Progressive Web App (PWA) de alto rendimiento.
 
-### Vía CLI de Vercel:
+### Opción A: Despliegue automático desde GitHub (Recomendado)
+1. Entra a [Vercel Dashboard](https://vercel.com/dashboard).
+2. Haz clic en **Add New...** > **Project**.
+3. Importa tu repositorio `ClinlabEndocrinologia`.
+4. Deja la configuración por defecto:
+   - **Framework Preset:** `Other`
+   - **Root Directory:** `./`
+   - **Build Command:** *(vacío)*
+   - **Output Directory:** *(vacío / `.`)*
+5. Haz clic en **Deploy**. ¡Cada `git push` a `main` actualizará Vercel automáticamente!
+
+### Opción B: Despliegue directo mediante Vercel CLI
 ```powershell
 npx vercel
 npx vercel --prod
 ```
 
-### Vía interfaz web de Vercel (Conectando a GitHub):
-1. Inicia sesión en [Vercel Dashboard](https://vercel.com/dashboard).
-2. Haz clic en **Add New...** -> **Project**.
-3. Selecciona tu repositorio de GitHub `TU_REPOSITORIO`.
-4. En la configuración del proyecto:
-   - **Framework Preset:** `Other` (o Vite/HTML).
-   - **Build Command:** *(dejar vacío)*.
-   - **Output Directory:** `.` (raíz).
-5. Haz clic en **Deploy**.
-
-> **Manejo de Almacenamiento en Vercel (Modo Web sin Servidor Local):**
-> - La versión desplegada en Vercel opera de forma 100% cliente en el navegador.
-> - Cuenta con **Storage Shield (IndexedDB)**: superada la cuota estándar de 5MB de `LocalStorage` (alrededor de 900-1,000 registros de pacientes), la aplicación almacena de forma segura e ilimitada las solicitudes en la base de datos interna IndexedDB del navegador.
-> - La generación de códigos correlativos es calculada dinámicamente combinando la fecha y hora de registro (`AAAAMMDDHHMMSS`) con verificación de unicidad en IndexedDB y memoria local, garantizando orden cronológico ilimitado sin colisiones.
+### Características en Vercel:
+- **Almacenamiento Seguro (IndexedDB + Storage Shield):** Almacenamiento local estructurado e ilimitado en el navegador, sin depender de backend externo.
+- **Códigos Únicos:** Generación de códigos cronológicos `AAAAMMDDHHMMSS` sin colisiones.
+- **Impresión Profesional:** Plantilla vectorial Media Carta / A5 con código de barras Code 128 (SVG nativo).
+- **Service Worker (PWA):** Soporte offline completo y capacidad de instalación como app nativa.
 
 ---
 
-## 3. Servidor Local (Back-End con SQLite)
+## 3. Ejecución Local con Servidor Node.js
 
-Para el funcionamiento completo con base de datos local SQLite en el disco duro, multi-terminal en red local y licencias ilimitadas:
-
-1. Ejecutar `INICIAR_CLINLAB.bat` o en consola:
+Para ejecución local en red o escritorio:
 ```powershell
-node server.mjs
+npm start
+# O ejecutar INICIAR_CLINLAB.bat
 ```
-2. Abrir en el navegador:
-`http://localhost:3000`
-
+La aplicación abrirá en: `http://localhost:4244`

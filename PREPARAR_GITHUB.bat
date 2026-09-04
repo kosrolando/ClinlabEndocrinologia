@@ -9,31 +9,28 @@ echo.
 
 where git >nul 2>nul
 if errorlevel 1 (
-    echo [ERROR] Git no esta instalado. Instalo desde https://git-scm.com/
+    echo [ERROR] Git no esta instalado. Instale Git desde https://git-scm.com/
     pause
     exit /b 1
 )
 
-echo 1. Inicializando repositorio local...
-git init
+echo 1. Verificando estado de Git...
+git status --short
 
-echo 2. Agregando archivos...
+echo.
+echo 2. Agregando archivos al staging...
 git add .
 
-echo 3. Realizando primer commit...
-git commit -m "v1.1.0 - Codigos AAAAMMDDHHMMSS sin colision + impresion PDF vectorial optimizada"
+echo.
+echo 3. Realizando commit de actualizacion...
+git commit -m "v1.2.0 - Preparacion y actualizacion de archivos para GitHub y Vercel"
+
+echo.
+echo 4. Enviando cambios a GitHub (main)...
+git push origin main
 
 echo.
 echo ==========================================
-echo    PASOS RESTANTES EN GITHUB.COM
-echo ==========================================
-echo 1. Crea un repositorio NUEVO y VACIO en github.com
-echo 2. Copia el enlace del repositorio (HTTPS)
-echo 3. Escribe en esta terminal: 
-echo    git remote add origin TU_URL_DE_GITHUB
-echo 4. Luego escribe:
-echo    git branch -M main
-echo    git push -u origin main
-echo.
+echo    SINCRONIZACION COMPLETADA CON EXITO
 echo ==========================================
 pause
