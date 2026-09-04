@@ -14,6 +14,9 @@ try {
   console.warn("node:sqlite no disponible. Usando fallback de base de datos JSON.");
 }
 
+import { tursoBootstrap, tursoSavePayload, tursoDelete, tursoSearch, isTursoConfigured } from "./lib/turso.js";
+
+
 
 const root = fileURLToPath(new URL(".", import.meta.url));
 const port = Number(process.env.PORT || 4244);
@@ -492,6 +495,26 @@ async function ensureCloudStructure() {
 
 async function bootstrap() {
   await ensureStructure();
+  if (isTursoConfigured()) {
+    try {
+      const cloudData = await tursoBootstrap();
+      if (cloudData && cloudData.ok) {
+        return {
+          ...cloudData,
+          appDataRoot,
+          syncStatus: {
+            estado: "sincronizado",
+            texto: `Conectado a Turso Cloud (${cloudData.requests.length} registros)`,
+            ultima_sync: new Date().toISOString(),
+            licencia: "activo"
+          }
+        };
+      }
+    } catch (err) {
+      console.warn("[Turso] No se pudo cargar bootstrap desde Turso, usando base local:", err.message);
+    }
+  }
+
   const license = await verifyLicense();
   const year = new Date().getFullYear();
   const db = openYearDb(year);
@@ -533,12 +556,35 @@ async function savePayload(payload) {
       insertResult.run(req.code, test.id, req.date, test.result || "", test.notes || "", JSON.stringify({ request: req.code, test }));
     }
   }
+  
   const insertCatalog = db.prepare("INSERT OR REPLACE INTO catalogo (id, payload, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)");
-  for (const item of payload.catalog || []) insertCatalog.run(item.id, JSON.stringify(item));
+  for (const item of payload.catalog || []) {
+    insertCatalog.run(item.id, JSON.stringify(item));
+  }
+  
   markMonthsPending(db, payload.requests || []);
   db.close();
-  await logEvent("INFO", "ALMACENAMIENTO", "Datos guardados en la base anual activa.");
-  return { ok: true, syncStatus: await syncStatus() };
+
+  // Sincronizar en Turso si está configurado
+  if (isTursoConfigured()) {
+    try {
+      await tursoSavePayload(payload);
+    } catch (err) {
+      console.warn("[Turso] Error al sincronizar en Turso:", err.message);
+    }
+  }
+
+  const syncConfig = await readJson(configPath("sync_config.json"), {});
+  return {
+    ok: true,
+    syncStatus: {
+      estado: "sincronizado",
+      texto: isTursoConfigured() ? "Sincronizado con Turso Cloud" : "Guardado localmente",
+      ultima_sync: new Date().toISOString(),
+      licencia: "activo"
+    },
+    syncConfig
+  };
 }
 
 function markMonthsPending(db, requests) {
@@ -1243,12 +1289,31 @@ async function handleApi(req, res, url) {
       db.prepare("DELETE FROM pacientes WHERE codigo = ?").run(code);
       db.prepare("DELETE FROM reportes WHERE codigo = ?").run(code);
       db.close();
+      if (isTursoConfigured()) {
+        try {
+          await tursoDelete(code);
+        } catch (e) {
+          console.warn("[Turso] Error al eliminar en Turso:", e.message);
+        }
+      }
       return sendJson(res, 200, { ok: true });
     }
     if (url.pathname === "/api/search") {
       const code = url.searchParams.get("code") || "";
       const searchTxt = url.searchParams.get("q") || "";
       let found = [];
+
+      if (isTursoConfigured()) {
+        try {
+          const cloudResults = await tursoSearch(searchTxt, code);
+          if (cloudResults && cloudResults.length > 0) {
+            return sendJson(res, 200, cloudResults);
+          }
+        } catch (e) {
+          console.warn("[Turso] Error al buscar en Turso, buscando en local:", e.message);
+        }
+      }
+
       const db = openYearDb(new Date().getFullYear());
       let sql = "SELECT payload FROM reportes WHERE 1=1";
       const params = [];

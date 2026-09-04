@@ -6,7 +6,11 @@
   "scripts": {
     "build": "node --check server.mjs && node --check app.js",
     "start": "node server.mjs",
-    "check": "node --check server.mjs && node --check app.js",
-    "serve": "node server.mjs"
+    "check": "node --check server.mjs && node --check app.js && node --check lib/turso.js",
+    "serve": "node server.mjs",
+    "db:migrate": "node scripts/migrate-turso.mjs"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.18.0"
   }
 }
