@@ -4,11 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#1f7a4d" />
-    <title>ClinLab Suite</title>
+    <title>ClinLab Suite - Área de Endocrinología y Marcadores Tumorales</title>
     <link rel="manifest" href="manifest.json" />
     <link rel="icon" href="assets/icon.svg" />
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=33" />
+    <link rel="stylesheet" href="styles.css?v=34" />
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
   </head>
   <body>
@@ -17,6 +17,7 @@
         <img id="brandLogo" src="assets/icon.svg" alt="" />
         <div>
           <strong>ClinLab Suite</strong>
+          <small style="display:block;font-size:0.75rem;color:var(--muted);font-weight:600;">Endocrinología y Marcadores</small>
         </div>
       </div>
       <nav id="nav">
@@ -36,7 +37,7 @@
 
       <header class="topbar">
         <div>
-          <p id="labLabel">Laboratorio clinico</p>
+          <p id="labLabel">AREA DE ENDOCRINOLOGIA Y MARCADORES TUMORALES</p>
           <h1 id="viewTitle">Panel</h1>
         </div>
         <div class="actions">
@@ -176,8 +177,15 @@
             <h2>Asignacion de pruebas</h2>
             <div class="asignacion-grid">
               <div class="asignacion-menu">
-                <input id="testSearch" class="search" placeholder="Buscar prueba, codigo o area" />
-                <div id="areaTabs" class="tabs"></div>
+                <input id="testSearch" class="search" placeholder="Buscar prueba, código, parámetro o clasificación..." />
+                <div class="quick-profiles-container">
+                  <div class="quick-profiles-header">
+                    <span>⚡ Perfiles Frecuentes de Endocrinología</span>
+                    <button type="button" id="quickProfileClearBtn" class="quick-clear-btn" title="Deseleccionar todas las pruebas">Limpiar</button>
+                  </div>
+                  <div id="quickProfilesBar" class="quick-profiles-bar"></div>
+                </div>
+                <div id="areaTabs" class="tabs" style="display: none;"></div>
                 <div id="testTree" class="testTree"></div>
               </div>
               <div class="asignacion-assigned">
@@ -225,7 +233,6 @@
       <section id="worklist" class="view">
         <div class="tabs noPrint" id="worklistSubmenu" style="margin-bottom: 15px; border-bottom: 1px solid var(--line); padding-bottom: 8px; display: flex; gap: 8px;">
           <button type="button" class="active" id="subviewWorklistBtn" style="font-weight: 600;">Lista de Trabajo Interna</button>
-          <button type="button" id="subviewOutsourceBtn" style="font-weight: 600;">Envío de Muestras Externas</button>
           <button type="button" id="subviewEpidemiologyBtn" style="font-weight: 600;">Lista Epidemiológica por Prueba</button>
         </div>
 
@@ -254,24 +261,6 @@
               </div>
             </div>
             <div id="workRows" class="worklistContainer"></div>
-          </section>
-        </div>
-
-        <div id="outsourceWorklistPanel" hidden>
-          <section class="panel">
-            <div id="outsourcePrintHeader"></div>
-            <div class="panelHead noPrint">
-              <h2>Listas para envío de muestras</h2>
-              <div class="filters">
-                <div class="filter-col">
-                  <input id="outsourceDateFrom" type="date" title="Desde fecha" />
-                  <input id="outsourceDateTo" type="date" title="Hasta fecha" />
-                </div>
-                <button type="button" id="printOutsourceBtn" style="background: var(--teal); color: white; border: none; cursor: pointer; padding: 0 15px; border-radius: 6px; font-weight: bold; display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 36px; transition: background 0.2s;" title="Imprimir Lista de Envío de Muestras">Imprimir Lista</button>
-              </div>
-            </div>
-            <div id="outsourceFilterContainer" class="noPrint"></div>
-            <div id="outsourceRowsContainer" class="worklistContainer"></div>
           </section>
         </div>
 
@@ -304,6 +293,12 @@
             <div class="filters">
               <input id="reportSearch" placeholder="Codigo, paciente, medico o fecha" />
               <input id="reportDate" type="date" />
+              <select id="reportPaperFormatSelect" title="Formato de hoja de impresión" style="max-width: 180px;">
+                <option value="media_carta" selected>Media Carta (216x140mm)</option>
+                <option value="a5_horizontal">A5 Horizontal (210x148mm)</option>
+                <option value="medio_oficio">Medio Oficio (216x165mm)</option>
+                <option value="carta">Carta Estándar (216x279mm)</option>
+              </select>
               <button id="printSelectedReport">Imprimir busqueda</button>
               <button id="printDateReports">Imprimir fecha</button>
             </div>
@@ -359,54 +354,31 @@
       </section>
 
       <section id="settings" class="view">
-        <section class="panel settingsAccess">
-          <div class="panelHead">
-            <h2>Acceso administrativo</h2>
-            <span id="settingsLockState" class="statusPill">Bloqueado</span>
-          </div>
-          <div class="formGrid">
-            <label>Usuario administrador<input id="adminUser" autocomplete="username" /></label>
-            <label>Contrasena<input id="adminPassword" type="password" autocomplete="current-password" /></label>
-          </div>
-          <div class="formActions">
-            <button type="button" id="unlockSettings">Desbloquear configuracion</button>
-            <button type="button" id="lockSettings">Bloquear</button>
-          </div>
-          <p class="note">Este acceso protege los cambios institucionales, almacenamiento online y registro de respaldos.</p>
-        </section>
         <div class="grid two">
-          <form id="institutionForm" class="panel adminOnly">
+          <form id="institutionForm" class="panel">
             <h2>Identidad institucional</h2>
-            <label>Institucion<input name="institution" /></label>
-            <label>Establecimiento de Salud<input name="healthFacility" /></label>
-            <label>Nombre del laboratorio<input name="lab" /></label>
-            <label>Areas de laboratorio<input name="labAreas" placeholder="Hematologia, Quimica Sanguinea..." /></label>
-            <label>Direccion<input name="address" /></label>
-            <label>Telefono<input name="phone" /></label>
+            <label>Institución<input name="institution" value="CAJA NACIONAL DE SALUD" placeholder="CAJA NACIONAL DE SALUD" /></label>
+            <label>Establecimiento de Salud<input name="healthFacility" value="HOSPITAL DE ESPECIALIDADES MATERNO INFANTIL" placeholder="HOSPITAL DE ESPECIALIDADES MATERNO INFANTIL" /></label>
+            <label>Laboratorio clínico<input name="lab" value="AREA DE ENDOCRINOLOGIA Y MARCADORES TUMORALES" placeholder="AREA DE ENDOCRINOLOGIA Y MARCADORES TUMORALES" /></label>
+            <label>Áreas de laboratorio<input name="labAreas" placeholder="Endocrinología, Marcadores Tumorales, Hormonas..." /></label>
+            <label>Dirección<input name="address" placeholder="Av. Hernando Siles, La Paz - Bolivia" /></label>
+            <label>Teléfono<input name="phone" placeholder="Teléfono de contacto" /></label>
             <label>Logo institucional<input name="logo" type="file" accept="image/*" /></label>
-            <img id="logoPreview" class="logoPreview" alt="" />
+            <img id="logoPreview" class="logoPreview" alt="" src="assets/icon.svg" />
             <label>Color de contraste (Tema)<input name="themeColor" type="color" value="#1f7a4d" /></label>
+            <label>Formato de Impresión Predeterminado
+              <select name="printPaperSize" id="settingPrintPaperSize">
+                <option value="media_carta" selected>Media Carta (Half Letter / 216x140 mm) - Predeterminado</option>
+                <option value="a5_horizontal">A5 Horizontal (210x148 mm)</option>
+                <option value="medio_oficio">Medio Oficio (216x165 mm)</option>
+                <option value="carta">Carta Estándar (Letter / 216x279 mm)</option>
+              </select>
+            </label>
             <button type="submit">Guardar identidad</button>
           </form>
           <div style="display: flex; flex-direction: column; gap: 20px;">
-            <form id="storageForm" class="panel adminOnly">
-              <h2>Almacenamiento</h2>
-              <label>Enlace obligatorio Google Drive / OneDrive<input name="cloudUrl" placeholder="https://..." /></label>
-              <label>Proveedor de nube<select name="cloudProvider"><option value="googledrive">Google Drive</option><option value="onedrive">OneDrive</option></select></label>
-              <label>Token/API OAuth local<input name="token_api" placeholder="Opcional para integracion API" /></label>
-              <button type="submit">Guardar almacenamiento</button>
-              <div id="localFolderSyncSection" style="display: none; flex-direction: column; gap: 10px; border-top: 1px dashed var(--line); padding-top: 12px; margin-top: 12px;">
-                <label style="font-weight: 600; color: var(--teal);">Modo Web App (Vercel) - Carpeta en la Nube</label>
-                <p style="margin: 0; font-size: 0.8rem; color: var(--muted);">Para sincronizar con su Google Drive o OneDrive en esta computadora, vincule la carpeta local que sincroniza a la nube.</p>
-                <button type="button" id="selectSyncFolderBtn" style="background: var(--teal); color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;">📁 Vincular Carpeta de la Nube</button>
-                <p id="syncFolderStatusText" style="font-size: 0.85rem; color: var(--muted); margin: 0; font-weight: 500;"></p>
-                <button type="button" id="restoreFolderAccessBtn" style="display: none; background: #eab308; color: black; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%;">🔑 Restaurar Permiso de Acceso</button>
-              </div>
-              <div id="backupStatus" class="backupStatus"></div>
-            </form>
-            <!-- collabForm removed -->
             <div class="panel">
-              <div class="exportBox">
+              <div class="exportBox" style="margin-top: 0; padding-top: 0; border-top: none;">
                 <h2>Archivo y Respaldos Cronológicos (12 Meses)</h2>
                 <div class="chrono-stats-badges" style="margin-bottom: 12px;">
                   <span id="chronoBadgeTotal" class="chrono-badge total-badge">Total: 0 registros</span>
@@ -414,7 +386,7 @@
                   <span id="chronoBadgeArchive" class="chrono-badge archive-badge">Históricos (4-12m): 0</span>
                 </div>
                 
-                <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 10px;">Seleccione el período cronológico deseado para descargar su respaldo estructurado o exportación:</p>
+                <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 10px;">Seleccione el período cronológico deseado para descargar su respaldo estructurado o exportación local:</p>
                 <div class="chrono-selectors-grid">
                   <label>Año
                     <select id="chronoYearSelect"><option value="">Todos los años</option></select>
@@ -449,13 +421,9 @@
                 <h2>Historial de respaldos</h2>
                 <div id="backupHistory" class="backupHistory"></div>
               </div>
-              <p class="note" style="margin-top: 10px;">Los respaldos organizan los registros cronológicamente (Año/Mes/Día). Los datos se conservan por 12 meses; los registros vencidos se depuran automáticamente tras 1 semana de preaviso.</p>
+              <p class="note" style="margin-top: 10px;">Los respaldos se generan de forma local y estructurada (Año/Mes/Día). Los datos se conservan por 12 meses con preaviso de 7 días antes de depurar registros históricos.</p>
             </div>
-            <div class="panel adminOnly exportBox">
-              <h2>Administracion tecnica</h2>
-              <!-- license/sync buttons removed -->
-            </div>
-            <div class="panel adminOnly exportBox" style="border-color: #fca5a5;">
+            <div class="panel exportBox" style="border-color: #fca5a5;">
               <h2 style="color: #dc2626;">Zona de Peligro</h2>
               <button type="button" id="factoryReset" style="background: #ef4444; color: white; border: none; padding: 10px; border-radius: 6px; width: 100%; cursor: pointer;">Restablecer Sistema (Borrar Todo)</button>
             </div>
@@ -531,6 +499,6 @@
         </div>
       </section>
     </div>
-    <script type="module" src="app.js?v=33"></script>
+    <script type="module" src="app.js?v=34"></script>
   </body>
 </html>

@@ -641,7 +641,7 @@ let assignedBlocks = [];
 let selectedRequestIndex = null;
 let editingCatalog = new Set();
 let deferredInstall = null;
-let settingsUnlocked = false;
+let settingsUnlocked = true;
 let backendReady = false;
 let licenseState = { estado: "activo" };
 let syncStatusState = { estado: "offline", texto: "Sin conexion - Trabajando en modo offline" };
@@ -657,6 +657,7 @@ const ADMIN_CREDENTIALS = {
 };
 
 const AREA_PRIORITY = [
+  "ENDOCRINOLOGIA Y MARCADORES TUMORALES",
   "Hematología",
   "Química Sanguínea",
   "Inmunología",
@@ -668,20 +669,501 @@ const AREA_PRIORITY = [
   "Bacteriología"
 ];
 
+const INITIAL_CATALOG = [
+  {
+    "id": "EYM-0001",
+    "area": "ENDOCRINOLOGIA Y MARCADORES TUMORALES",
+    "determinacion": "TSH NEONATAL",
+    "clasificacion": "CRIBADO NEONATAL",
+    "parametro": "HORMONA ESTIMULANTE DE LA TIROIDES NEONATAL",
+    "tipo": "CUANTITATIVO",
+    "muestra": "SANGRE (TARJETA)",
+    "unidad": "µUI/mL",
+    "minimo": "0.00",
+    "maximo": "10.00",
+    "referencia": "NORMAL: 0 a 10 µUI/mL",
+    "activo": true,
+    "orden": 0,
+    "nombre": "HORMONA ESTIMULANTE DE LA TIROIDES NEONATAL",
+    "categoria": "CRIBADO NEONATAL",
+    "seleccionableIndividual": true,
+    "seleccionableGrupo": true
+  },
+  {
+    "id": "EYM-0002",
+    "area": "ENDOCRINOLOGIA Y MARCADORES TUMORALES",
+    "determinacion": "17 OH PROGESTERONA NEONATAL",
+    "clasificacion": "CRIBADO NEONATAL",
+    "parametro": "17-HIDROXIPROGESTERONA NEONATAL",
+    "tipo": "CUANTITATIVO",
+    "muestra": "SANGRE (TARJETA)",
+    "unidad": "nmol/L",
+    "minimo": "0.00",
+    "maximo": "30.00",
+    "referencia": "NORMAL: 0 a 30 nmol/L",
+    "activo": true,
+    "orden": 1,
+    "nombre": "17-HIDROXIPROGESTERONA NEONATAL",
+    "categoria": "CRIBADO NEONATAL",
+    "seleccionableIndividual": true,
+    "seleccionableGrupo": true
+  },
+  {
+    "id": "EYM-0003",
+    "area": "ENDOCRINOLOGIA Y MARCADORES TUMORALES",
+    "determinacion": "IRT",
+    "clasificacion": "CRIBADO NEONATAL",
+    "parametro": "TRIPSINA INMUNORREACTIVA (FIBROSIS QUÍSTICA)",
+    "tipo": "CUANTITATIVO",
+    "muestra": "SANGRE (TARJETA)",
+    "unidad": "ng/mL",
+    "minimo": "",
+    "maximo": "90.00",
+    "referencia": "NORMAL: < 90 ng/mL",
+    "activo": true,
+    "orden": 2,
+    "nombre": "TRIPSINA INMUNORREACTIVA (FIBROSIS QUÍSTICA)",
+    "categoria": "CRIBADO NEONATAL",
+    "seleccionableIndividual": true,
+    "seleccionableGrupo": true
+  },
+  {
+    "id": "EYM-0004",
+    "area": "ENDOCRINOLOGIA Y MARCADORES TUMORALES",
+    "determinacion": "PKU",
+    "clasificacion": "CRIBADO NEONATAL",
+    "parametro": "FENILALANINA / FENILCETONURIA",
+    "tipo": "CUANTITATIVO",
+    "muestra": "SANGRE (TARJETA)",
+    "unidad": "nmol/L",
+    "minimo": "0.00",
+    "maximo": "30.00",
+    "referencia": "NORMAL: 0 a 30 nmol/L",
+    "activo": true,
+    "orden": 3,
+    "nombre": "FENILALANINA / FENILCETONURIA",
+    "categoria": "CRIBADO NEONATAL",
+    "seleccionableIndividual": true,
+    "seleccionableGrupo": true
+  },
+  {
+    "id": "EYM-0005",
+    "area": "ENDOCRINOLOGIA Y MARCADORES TUMORALES",
+    "determinacion": "17 OH PROGESTERONA",
+    "clasificacion": "ESTEROIDES ADRENALES / EJE GONADAL",
+    "parametro": "17-HIDROXIPROGESTERONA",
+    "tipo": "CUANTITATIVO",
+    "muestra": "SANGRE",
+    "unidad": "pg/mL",
+    "minimo": "",
+    "maximo": "",
+    "referencia": "Niñas: 1 mes (2,4-16,8), 2 meses (1,6-9,7), 3 meses (0,1-3,1). Niños: 1 mes (0,0-8,0), 2 meses (3,6-13,7), 3 meses (1,7-4,0), 3-14 años (0,1-1,7). Adultos: 2,4-16,8. Mujeres: Fase Folicular (0,1-0,8), Fase Lútea (0,6-2,3), Ovulación (0,3-1,4), Post ACTH (<3,2), Embarazo Tardío (2,0-12,0).",
+    "activo": true,
+    "orden": 4,
+    "nombre": "17-HIDROXIPROGESTERONA",
+    "categoria": "ESTEROIDES ADRENALES / EJE GONADAL",
+    "seleccionableIndividual": true,
+    "seleccionableGrupo": true
+  },
+  {
+    "id": "EYM-0006",
+    "area": "ENDOCRINOLOGIA Y MARCADORES TUMORALES",
+    "determinacion": "TESTOSTERONA LIBRE",
+    "clasificacion": "ANDRÓGENOS / EJE GONADAL",
+    "parametro": "TESTOSTERONA LIBRE",
+    "tipo": "CUANTITATIVO",
+    "muestra": "SANGRE",
+    "unidad": "pg/mL",
+    "minimo": "0.00",
+    "maximo": "50.00",
+    "referencia": "Hombres: 15,00 - 50,00; Mujeres: menor a 4,2 (Rango analítico general 0,00 - 50,00)",
+    "activo": true,
+    "orden": 5,
+    "nombre": "TESTOSTERONA LIBRE",
+    "categoria": "ANDRÓGENOS / EJE GONADAL",
+    "seleccionableIndividual": true,
+    "seleccionableGrupo": true
+  },
+  {
+    "id": "EYM-0007",
+    "area": "ENDOCRINOLOGIA Y MARCADORES TUMORALES",
+    "determinacion": "CALCITONINA",
+    "clasificacion": "MARCADOR TUMORAL / METABOLISMO FOSFOCÁLCICO",
+    "parametro": "CALCITONINA",
+    "tipo": "CUANTITATIVO",
+    "muestra": "SANGRE",
+    "unidad": "pg/mL",
+    "minimo": "0.00",
+    "maximo": "18.00",
+    "referencia": "0,00 a 18,00 pg/mL",
+    "activo": true,
+    "orden": 6,
+    "nombre": "CALCITONINA",
+    "categoria": "MARCADOR TUMORAL / METABOLISMO FOSFOCÁLCICO",
+    "seleccionableIndividual": true,
+    "seleccionableGrupo": true
+  },
+  {
+    "id": "EYM-0008",
+    "area": "ENDOCRINOLOGIA Y MARCADORES TUMORALES",
+    "determinacion": "VITAMINA B12",
+    "clasificacion": "VITAMINAS / NUTRICIÓN",
+    "parametro": "CIANOCOBALAMINA / VITAMINA B12",
+    "tipo": "CUANTITATIVO",
+    "muestra": "SANGRE",
+    "unidad": "ng/mL",
+    "minimo": "200.00",
+    "maximo": "1100.00",
+    "referencia": "Normal: 200 - 1100 ng/mL; Deficiente: Menor a 200 ng/mL",
+    "activo": true,
+    "orden": 7,
+    "nombre": "CIANOCOBALAMINA / VITAMINA B12",
+    "categoria": "VITAMINAS / NUTRICIÓN",
+    "seleccionableIndividual": true,
+    "seleccionableGrupo": true
+  },
+  {
+    "id": "EYM-0009",
+    "area": "ENDOCRINOLOGIA Y MARCADORES TUMORALES",
+    "determinacion": "ACIDO FOLICO",
+    "clasificacion": "VITAMINAS / NUTRICIÓN",
+    "parametro": "ÁCIDO FÓLICO / FOLATO SÉRICO",
+    "tipo": "CUANTITATIVO",
+    "muestra": "SANGRE",
+    "unidad": "ng/mL",
+    "minimo": "5.20",
+    "maximo": "20.00",
+    "referencia": "Normal: 5,2 - 20 ng/mL; Deficiente: 3,2 - 5,2 ng/Ml",
+    "activo": true,
+    "orden": 8,
+    "nombre": "ÁCIDO FÓLICO / FOLATO SÉRICO",
+    "categoria": "VITAMINAS / NUTRICIÓN",
+    "seleccionableIndividual": true,
+    "seleccionableGrupo": true
+  },
+  {
+    "id": "EYM-0010",
+    "area": "ENDOCRINOLOGIA Y MARCADORES TUMORALES",
+    "determinacion": "RECEPTOR ANTI TSH",
+    "clasificacion": "AUTOINMUNIDAD TIROIDEA",
+    "parametro": "ANTICUERPOS CONTRA EL RECEPTOR DE TSH (TRAB)",
+    "tipo": "CUANTITATIVO",
+    "muestra": "SANGRE",
+    "unidad": "pg/mL",
+    "minimo": "0.00",
+    "maximo": "1.50",
+    "referencia": "Negativo: Inferior a 1,00 pg/mLZona Gris: Entre 1,00 y 1,30 pg/mLPositivo: Superior a 1,50 pg/mL",
+    "activo": true,
+    "orden": 9,
+    "nombre": "ANTICUERPOS CONTRA EL RECEPTOR DE TSH (TRAB)",
+    "categoria": "AUTOINMUNIDAD TIROIDEA",
+    "seleccionableIndividual": true,
+    "seleccionableGrupo": true
+  },
+  {
+    "id": "EYM-0011",
+    "area": "ENDOCRINOLOGIA Y MARCADORES TUMORALES",
+    "determinacion": "TSH3ULTRA",
+    "clasificacion": "EJE TIROIDEO",
+    "parametro": "HORMONA ESTIMULANTE DE LA TIROIDES ULTRASENSIBLE",
+    "tipo": "CUANTITATIVO",
+    "muestra": "SANGRE",
+    "unidad": "µIU/mL",
+    "minimo": "0.34",
+    "maximo": "5.60",
+    "referencia": "0,34 a 5,60 µIU/mL",
+    "activo": true,
+    "orden": 10,
+    "nombre": "HORMONA ESTIMULANTE DE LA TIROIDES ULTRASENSIBLE",
+    "categoria": "EJE TIROIDEO",
+    "seleccionableIndividual": true,
+    "seleccionableGrupo": true
+  },
+  {
+    "id": "EYM-0012",
+    "area": "ENDOCRINOLOGIA Y MARCADORES TUMORALES",
+    "determinacion": "T3 TOTAL",
+    "clasificacion": "EJE TIROIDEO",
+    "parametro": "TRIYODOTIRONINA TOTAL",
+    "tipo": "CUANTITATIVO",
+    "muestra": "SANGRE",
+    "unidad": "ng/mL",
+    "minimo": "0.87",
+    "maximo": "1.78",
+    "referencia": "0,87 a 1,78 ng/mL",
+    "activo": true,
+    "orden": 11,
+    "nombre": "TRIYODOTIRONINA TOTAL",
+    "categoria": "EJE TIROIDEO",
+    "seleccionableIndividual": true,
+    "seleccionableGrupo": true
+  },
+  {
+    "id": "EYM-0013",
+    "area": "ENDOCRINOLOGIA Y MARCADORES TUMORALES",
+    "determinacion": "T4 TOTAL",
+    "clasificacion": "EJE TIROIDEO",
+    "parametro": "TIROXINA TOTAL",
+    "tipo": "CUANTITATIVO",
+    "muestra": "SANGRE",
+    "unidad": "µg/dL",
+    "minimo": "6.09",
+    "maximo": "12.23",
+    "referencia": "6,09 a 12,23 µg/dL",
+    "activo": true,
+    "orden": 12,
+    "nombre": "TIROXINA TOTAL",
+    "categoria": "EJE TIROIDEO",
+    "seleccionableIndividual": true,
+    "seleccionableGrupo": true
+  },
+  {
+    "id": "EYM-0014",
+    "area": "ENDOCRINOLOGIA Y MARCADORES TUMORALES",
+    "determinacion": "T4 LIBRE",
+    "clasificacion": "EJE TIROIDEO",
+    "parametro": "TIROXINA LIBRE",
+    "tipo": "CUANTITATIVO",
+    "muestra": "SANGRE",
+    "unidad": "ng/dL",
+    "minimo": "0.61",
+    "maximo": "1.12",
+    "referencia": "0,61 a 1,12 ng/dL",
+    "activo": true,
+    "orden": 13,
+    "nombre": "TIROXINA LIBRE",
+    "categoria": "EJE TIROIDEO",
+    "seleccionableIndividual": true,
+    "seleccionableGrupo": true
+  },
+  {
+    "id": "EYM-0015",
+    "area": "ENDOCRINOLOGIA Y MARCADORES TUMORALES",
+    "determinacion": "ATPO",
+    "clasificacion": "AUTOINMUNIDAD TIROIDEA",
+    "parametro": "ANTICUERPOS ANTI TIROPEROXIDASA",
+    "tipo": "CUANTITATIVO",
+    "muestra": "SANGRE",
+    "unidad": "UI/mL",
+    "minimo": "0.00",
+    "maximo": "9.00",
+    "referencia": "Hasta 9,00 UI/mL",
+    "activo": true,
+    "orden": 14,
+    "nombre": "ANTICUERPOS ANTI TIROPEROXIDASA",
+    "categoria": "AUTOINMUNIDAD TIROIDEA",
+    "seleccionableIndividual": true,
+    "seleccionableGrupo": true
+  },
+  {
+    "id": "EYM-0016",
+    "area": "ENDOCRINOLOGIA Y MARCADORES TUMORALES",
+    "determinacion": "ATG II",
+    "clasificacion": "AUTOINMUNIDAD TIROIDEA / MARCADOR TUMORAL",
+    "parametro": "ANTICUERPOS ANTI TIROGLOBULINA II",
+    "tipo": "CUANTITATIVO",
+    "muestra": "SANGRE",
+    "unidad": "UI/mL",
+    "minimo": "0.00",
+    "maximo": "4.00",
+    "referencia": "Hasta 4,00 UI/mL",
+    "activo": true,
+    "orden": 15,
+    "nombre": "ANTICUERPOS ANTI TIROGLOBULINA II",
+    "categoria": "AUTOINMUNIDAD TIROIDEA / MARCADOR TUMORAL",
+    "seleccionableIndividual": true,
+    "seleccionableGrupo": true
+  },
+  {
+    "id": "EYM-0017",
+    "area": "ENDOCRINOLOGIA Y MARCADORES TUMORALES",
+    "determinacion": "TIROGLOBULINA",
+    "clasificacion": "MARCADOR TUMORAL / TIROIDES",
+    "parametro": "TIROGLOBULINA (TG)",
+    "tipo": "CUANTITATIVO",
+    "muestra": "SANGRE",
+    "unidad": "ng/mL",
+    "minimo": "1.60",
+    "maximo": "50.00",
+    "referencia": "1,60 a 50,00 ng/mL",
+    "activo": true,
+    "orden": 16,
+    "nombre": "TIROGLOBULINA (TG)",
+    "categoria": "MARCADOR TUMORAL / TIROIDES",
+    "seleccionableIndividual": true,
+    "seleccionableGrupo": true
+  },
+  {
+    "id": "EYM-0018",
+    "area": "ENDOCRINOLOGIA Y MARCADORES TUMORALES",
+    "determinacion": "FSH",
+    "clasificacion": "GONADOTROPINAS / EJE GONADAL",
+    "parametro": "HORMONA FOLICULOESTIMULANTE",
+    "tipo": "CUANTITATIVO",
+    "muestra": "SANGRE",
+    "unidad": "mUI/mL",
+    "minimo": "",
+    "maximo": "",
+    "referencia": "Hombres: 1,4-18,1 mUI/mL. Mujeres: Fase folicular (2,5-10,2), Pico mitad ciclo (3,4-33,4), Fase lútea (1,5-9,1), Postmenopausia (23,0-116,3).",
+    "activo": true,
+    "orden": 17,
+    "nombre": "HORMONA FOLICULOESTIMULANTE",
+    "categoria": "GONADOTROPINAS / EJE GONADAL",
+    "seleccionableIndividual": true,
+    "seleccionableGrupo": true
+  },
+  {
+    "id": "EYM-0019",
+    "area": "ENDOCRINOLOGIA Y MARCADORES TUMORALES",
+    "determinacion": "LH",
+    "clasificacion": "GONADOTROPINAS / EJE GONADAL",
+    "parametro": "HORMONA LUTEINIZANTE",
+    "tipo": "CUANTITATIVO",
+    "muestra": "SANGRE",
+    "unidad": "mUI/mL",
+    "minimo": "",
+    "maximo": "",
+    "referencia": "Hombres: 1,5-9,3 mUI/mL. Mujeres: Fase folicular (1,9-12,5), Pico mitad ciclo (8,7-76,3), Fase lútea (0,5-16,9), Postmenopausia (15,9-54,0).",
+    "activo": true,
+    "orden": 18,
+    "nombre": "HORMONA LUTEINIZANTE",
+    "categoria": "GONADOTROPINAS / EJE GONADAL",
+    "seleccionableIndividual": true,
+    "seleccionableGrupo": true
+  },
+  {
+    "id": "EYM-0020",
+    "area": "ENDOCRINOLOGIA Y MARCADORES TUMORALES",
+    "determinacion": "ACTH",
+    "clasificacion": "EJE ADRENAL",
+    "parametro": "HORMONA ADRENOCORTICOTROPINA",
+    "tipo": "CUANTITATIVO",
+    "muestra": "SANGRE",
+    "unidad": "pg/mL",
+    "minimo": "7.20",
+    "maximo": "63.30",
+    "referencia": "7,20 a 63,30 pg/mL (Muestra matutina)",
+    "activo": true,
+    "orden": 19,
+    "nombre": "HORMONA ADRENOCORTICOTROPINA",
+    "categoria": "EJE ADRENAL",
+    "seleccionableIndividual": true,
+    "seleccionableGrupo": true
+  },
+  {
+    "id": "EYM-0021",
+    "area": "ENDOCRINOLOGIA Y MARCADORES TUMORALES",
+    "determinacion": "PROLACTINA",
+    "clasificacion": "EJE HIPOFISARIO / REPRODUCCIÓN",
+    "parametro": "PROLACTINA (PRL)",
+    "tipo": "CUANTITATIVO",
+    "muestra": "SANGRE",
+    "unidad": "ng/mL",
+    "minimo": "",
+    "maximo": "",
+    "referencia": "Hombres: 2,1 - 17,7 ng/mL. Mujeres no embarazadas: 2,8 - 29,2 ng/mL. Mujeres embarazadas: 9,7 - 208,5 ng/mL. Postmenopausia: 1,8 - 20,3 ng/mL.",
+    "activo": true,
+    "orden": 20,
+    "nombre": "PROLACTINA (PRL)",
+    "categoria": "EJE HIPOFISARIO / REPRODUCCIÓN",
+    "seleccionableIndividual": true,
+    "seleccionableGrupo": true
+  },
+  {
+    "id": "EYM-0022",
+    "area": "ENDOCRINOLOGIA Y MARCADORES TUMORALES",
+    "determinacion": "SHBG",
+    "clasificacion": "PROTEÍNAS TRANSPORTADORAS / ANDRÓGENOS",
+    "parametro": "GLOBULINA FIJADORA DE HORMONAS SEXUALES",
+    "tipo": "CUANTITATIVO",
+    "muestra": "SANGRE",
+    "unidad": "nmol/L",
+    "minimo": "",
+    "maximo": "",
+    "referencia": "Hombres (20-49 años): 18,3 - 54,1 nmol/L; (>=50 años): 20,6 - 76,7. Mujeres (20-49 años): 32,4 - 128,0 nmol/L; (>=50 años): 27,1 - 128,0.",
+    "activo": true,
+    "orden": 21,
+    "nombre": "GLOBULINA FIJADORA DE HORMONAS SEXUALES",
+    "categoria": "PROTEÍNAS TRANSPORTADORAS / ANDRÓGENOS",
+    "seleccionableIndividual": true,
+    "seleccionableGrupo": true
+  }
+];
+
+const QUICK_PROFILES = [
+  {
+    id: "perfil-tiroideo",
+    label: "Perfil Tiroideo",
+    icon: "🦋",
+    desc: "TSH, T3 Total, T4 Total, T4 Libre",
+    testIds: ["EYM-0011", "EYM-0012", "EYM-0013", "EYM-0014"]
+  },
+  {
+    id: "autoinmunidad-tiroidea",
+    label: "Autoinmunidad Tiroidea",
+    icon: "🛡️",
+    desc: "ATPO, ATG II, Receptor Anti-TSH (TRAB)",
+    testIds: ["EYM-0015", "EYM-0016", "EYM-0010"]
+  },
+  {
+    id: "cribado-neonatal",
+    label: "Cribado Neonatal",
+    icon: "👶",
+    desc: "TSH Neonatal, 17-OHP Neo, IRT, PKU",
+    testIds: ["EYM-0001", "EYM-0002", "EYM-0003", "EYM-0004"]
+  },
+  {
+    id: "perfil-gonadal",
+    label: "Perfil Gonadal / Fertilidad",
+    icon: "⚥",
+    desc: "FSH, LH, Prolactina, Testosterona Libre, SHBG",
+    testIds: ["EYM-0018", "EYM-0019", "EYM-0021", "EYM-0006", "EYM-0022"]
+  },
+  {
+    id: "marcadores-tumorales",
+    label: "Marcadores Tumorales",
+    icon: "🎯",
+    desc: "Tiroglobulina, Calcitonina, Anti-Tiroglobulina",
+    testIds: ["EYM-0017", "EYM-0007", "EYM-0016"]
+  },
+  {
+    id: "eje-adrenal",
+    label: "Eje Adrenal",
+    icon: "⚡",
+    desc: "ACTH, 17-OH Progesterona",
+    testIds: ["EYM-0020", "EYM-0005"]
+  },
+  {
+    id: "perfil-vitaminico",
+    label: "Perfil Vitamínico",
+    icon: "💊",
+    desc: "Vitamina B12, Ácido Fólico",
+    testIds: ["EYM-0008", "EYM-0009"]
+  },
+  {
+    id: "todos",
+    label: "Seleccionar Todos",
+    icon: "📋",
+    desc: "Todas las pruebas del catálogo",
+    testIds: "ALL"
+  }
+];
+
 const state = {
   settings: store.get("clinlab.settings", {
-    institution: "",
-    healthFacility: "",
-    lab: "Laboratorio clinico",
+    institution: "CAJA NACIONAL DE SALUD",
+    healthFacility: "HOSPITAL DE ESPECIALIDADES MATERNO INFANTIL",
+    lab: "AREA DE ENDOCRINOLOGIA Y MARCADORES TUMORALES",
     labAreas: "",
     address: "",
     phone: "",
-    logo: "",
+    logo: "assets/icon.svg",
     cloudUrl: "",
     collabToken: "",
     localAccepted: true,
-    initialized: false,
+    initialized: true,
     themeColor: "#1f7a4d",
+    printPaperSize: "media_carta",
     backups: [],
     outsourceAreas: []
   }),
@@ -689,6 +1171,23 @@ const state = {
   externalList: store.get("clinlab.externalList", []),
   draft: store.get("clinlab.draft", {})
 };
+
+// Migración y compatibilidad de identidad institucional fija
+if (!state.settings.institution || state.settings.institution === "Institucion") {
+  state.settings.institution = "CAJA NACIONAL DE SALUD";
+}
+if (!state.settings.healthFacility || state.settings.healthFacility === "Establecimiento de Salud") {
+  state.settings.healthFacility = "HOSPITAL DE ESPECIALIDADES MATERNO INFANTIL";
+}
+if (!state.settings.lab || state.settings.lab === "Laboratorio clinico") {
+  state.settings.lab = "AREA DE ENDOCRINOLOGIA Y MARCADORES TUMORALES";
+}
+if (!state.settings.logo) {
+  state.settings.logo = "assets/icon.svg";
+}
+if (!state.settings.printPaperSize) {
+  state.settings.printPaperSize = "media_carta";
+}
 
 const statsEngine = {
   cache: new Map(),
@@ -1311,6 +1810,15 @@ function applyTheme(color) {
   if (meta) meta.content = color;
 }
 
+function applyPaperSize(size) {
+  const paperSize = size || state.settings.printPaperSize || "media_carta";
+  document.body.dataset.paperSize = paperSize;
+  const settingSelect = $("#settingPrintPaperSize");
+  if (settingSelect && settingSelect.value !== paperSize) settingSelect.value = paperSize;
+  const reportSelect = $("#reportPaperFormatSelect");
+  if (reportSelect && reportSelect.value !== paperSize) reportSelect.value = paperSize;
+}
+
 function cleanupEmptyTests() {
   const now = Date.now();
   let changed = false;
@@ -1750,6 +2258,19 @@ async function init() {
   systemMetadata = bootstrap?.metadata || {};
   
   if (bootstrap?.settings) Object.assign(state.settings, bootstrap.settings);
+  if (!state.settings.institution || state.settings.institution === "Institucion") {
+    state.settings.institution = "CAJA NACIONAL DE SALUD";
+  }
+  if (!state.settings.healthFacility || state.settings.healthFacility === "Establecimiento de Salud") {
+    state.settings.healthFacility = "HOSPITAL DE ESPECIALIDADES MATERNO INFANTIL";
+  }
+  if (!state.settings.lab || state.settings.lab === "Laboratorio clinico") {
+    state.settings.lab = "AREA DE ENDOCRINOLOGIA Y MARCADORES TUMORALES";
+  }
+  if (!state.settings.logo || state.settings.logo === "") {
+    state.settings.logo = "assets/icon.svg";
+  }
+  state.settings.initialized = true;
   state.settings.collabTerminalId ||= uid();
   state.settings.outsourceAreas ||= [];
   
@@ -1805,7 +2326,7 @@ async function init() {
   bindStorageControls();
   bindCollabControls();
   bindOutsourceControls();
-  bindOutsourceSubmenu();
+  bindWorklistSubmenu();
   hydrateForms();
   renderDiagnosisSuggestions();
   renderAll();
@@ -1838,8 +2359,8 @@ async function loadInitialCatalog() {
     if (!res.ok) throw new Error("Catalog file not found");
     return normalizeCatalogList(await res.json());
   } catch (err) {
-    console.error("Error loading initial catalog:", err);
-    return [];
+    console.warn("Using INITIAL_CATALOG fallback:", err);
+    return normalizeCatalogList(INITIAL_CATALOG);
   }
 }
 
@@ -1926,6 +2447,23 @@ function bindForms() {
     }
   });
   $("#testSearch").addEventListener("input", renderTestTree);
+  $("#quickProfilesBar")?.addEventListener("click", (event) => {
+    const chip = event.target.closest(".quick-profile-chip");
+    if (chip) {
+      event.preventDefault();
+      const profileId = chip.dataset.profileId;
+      toggleQuickProfile(profileId);
+    }
+  });
+  $("#quickProfileClearBtn")?.addEventListener("click", (event) => {
+    event.preventDefault();
+    selectedTests.clear();
+    assignedBlocks = [];
+    autosaveDraft();
+    renderQuickProfiles();
+    renderTestTree();
+    renderRequiredSamples();
+  });
   
   if ($("#patientSearchInput")) {
     $("#patientSearchInput").addEventListener("input", () => {
@@ -1951,6 +2489,16 @@ function bindForms() {
     $(`#${id}`).addEventListener("input", renderReports);
     $(`#${id}`).addEventListener("change", renderReports);
   });
+  $("#reportPaperFormatSelect")?.addEventListener("change", (e) => {
+    applyPaperSize(e.target.value);
+    state.settings.printPaperSize = e.target.value;
+    saveAll();
+  });
+  $("#settingPrintPaperSize")?.addEventListener("change", (e) => {
+    applyPaperSize(e.target.value);
+    state.settings.printPaperSize = e.target.value;
+    saveAll();
+  });
   $("#printSelectedReport").addEventListener("click", () => {
     document.body.dataset.printMode = "reports";
     window.print();
@@ -1962,11 +2510,13 @@ function bindForms() {
     document.body.dataset.printMode = "reports";
     window.print();
   });
-  $("#institutionForm").addEventListener("submit", saveInstitution);
-  $("#storageForm").addEventListener("submit", saveStorage);
-  $("#institutionForm").logo.addEventListener("change", previewLogo);
-  $("#unlockSettings").addEventListener("click", unlockSettings);
-  $("#lockSettings").addEventListener("click", lockSettings);
+  if ($("#institutionForm")) {
+    $("#institutionForm").addEventListener("submit", saveInstitution);
+    if ($("#institutionForm").logo) $("#institutionForm").logo.addEventListener("change", previewLogo);
+  }
+  if ($("#storageForm")) $("#storageForm").addEventListener("submit", saveStorage);
+  if ($("#unlockSettings")) $("#unlockSettings").addEventListener("click", unlockSettings);
+  if ($("#lockSettings")) $("#lockSettings").addEventListener("click", lockSettings);
   $("#refreshSystem").addEventListener("click", refreshSystem);
   $("#exportExcel").addEventListener("click", exportExcelWorkbook);
   $("#factoryReset").addEventListener("click", async () => {
@@ -2504,9 +3054,16 @@ function hydrateForms() {
   updateStatusButtons();
   updateAttentionButtons();
   updateFormProgress();
+  const instDefaults = {
+    institution: "CAJA NACIONAL DE SALUD",
+    healthFacility: "HOSPITAL DE ESPECIALIDADES MATERNO INFANTIL",
+    lab: "AREA DE ENDOCRINOLOGIA Y MARCADORES TUMORALES"
+  };
   Object.entries(state.settings).forEach(([key, value]) => {
-    if ($("#institutionForm")[key] && key !== "logo") $("#institutionForm")[key].value = value || "";
-    if ($("#storageForm")[key]) {
+    if ($("#institutionForm") && $("#institutionForm")[key] && key !== "logo") {
+      $("#institutionForm")[key].value = value || instDefaults[key] || "";
+    }
+    if ($("#storageForm") && $("#storageForm")[key]) {
       if ($("#storageForm")[key].type === "checkbox") $("#storageForm")[key].checked = Boolean(value);
       else $("#storageForm")[key].value = value || "";
     }
@@ -2534,17 +3091,18 @@ function hydrateForms() {
 
 function renderAll() {
   state.settings.backups ||= [];
-  $("#labLabel").textContent = state.settings.lab || "Laboratorio clinico";
-  if ($("#syncState")) $("#syncState").textContent = state.settings.cloudUrl ? "Nube configurada" : "Modo local";
-  if (state.settings.logo) {
-    $("#brandLogo").src = state.settings.logo;
-    $("#logoPreview").src = state.settings.logo;
+  const currentLab = (state.settings.lab && state.settings.lab !== "Laboratorio clinico") ? state.settings.lab : "AREA DE ENDOCRINOLOGIA Y MARCADORES TUMORALES";
+  $("#labLabel").textContent = currentLab;
+  if ($("#syncState")) $("#syncState").textContent = "Modo local";
+  const currentLogo = state.settings.logo || "assets/icon.svg";
+  if ($("#brandLogo")) $("#brandLogo").src = currentLogo;
+  if ($("#logoPreview")) {
+    $("#logoPreview").src = currentLogo;
     $("#logoPreview").hidden = false;
-  } else {
-    $("#logoPreview").hidden = true;
   }
   renderDashboard();
   renderTabs();
+  renderQuickProfiles();
   renderTestTree();
   renderPatientRows();
   renderCatalogFilters();
@@ -2552,9 +3110,6 @@ function renderAll() {
   renderOutsourceAreas();
   renderWorkFilters();
   renderWorklist();
-  if (!$("#outsourceWorklistPanel").hidden) {
-    renderOutsourceWorklist();
-  }
   if ($("#epidemiologyWorklistPanel") && !$("#epidemiologyWorklistPanel").hidden) {
     fillEpidemiologyParameterSelect();
     renderEpidemiologyWorklist();
@@ -2570,6 +3125,7 @@ function renderAll() {
   renderConnectedTerminals();
   renderRequiredSamples();
   applyTheme(state.settings.themeColor);
+  applyPaperSize(state.settings.printPaperSize || "media_carta");
   applyReadOnlyMode(licenseState?.estado === "restringido");
   
   const submitBtn = $("#patientForm button[type='submit']");
@@ -2656,73 +3212,119 @@ function renderTabs() {
     if (!button) return;
     selectedArea = button.dataset.area;
     renderTabs();
+    renderQuickProfiles();
     renderTestTree();
   };
 }
 
+function renderQuickProfiles() {
+  const bar = $("#quickProfilesBar");
+  if (!bar) return;
+
+  const currentAreaTests = catalog.filter(t => t.activo && (!selectedArea || t.area === selectedArea));
+  const currentAreaIds = new Set(currentAreaTests.map(t => t.id));
+
+  bar.innerHTML = QUICK_PROFILES.map(profile => {
+    let targetIds = [];
+    if (profile.testIds === "ALL") {
+      targetIds = currentAreaTests.map(t => t.id);
+    } else {
+      targetIds = profile.testIds.filter(id => currentAreaIds.has(id));
+    }
+
+    if (targetIds.length === 0) return "";
+
+    const selectedCount = targetIds.filter(id => selectedTests.has(id)).length;
+    const isAllSelected = selectedCount === targetIds.length && targetIds.length > 0;
+    const isPartiallySelected = selectedCount > 0 && !isAllSelected;
+
+    let chipClass = "quick-profile-chip";
+    if (isAllSelected) chipClass += " active";
+    else if (isPartiallySelected) chipClass += " partial";
+
+    return `
+      <button type="button" class="${chipClass}" data-profile-id="${escapeAttr(profile.id)}" title="${escapeAttr(profile.desc || profile.label)}">
+        <span class="chip-icon">${profile.icon || "🏷️"}</span>
+        <span>${escapeHtml(profile.label)}</span>
+        <span class="chip-badge">${selectedCount}/${targetIds.length}</span>
+      </button>
+    `;
+  }).join("");
+
+  const clearBtn = $("#quickProfileClearBtn");
+  if (clearBtn) {
+    clearBtn.style.display = selectedTests.size > 0 ? "inline-flex" : "none";
+  }
+}
+
+function toggleQuickProfile(profileId) {
+  const profile = QUICK_PROFILES.find(p => p.id === profileId);
+  if (!profile) return;
+
+  const currentAreaTests = catalog.filter(t => t.activo && (!selectedArea || t.area === selectedArea));
+  const currentAreaIds = new Set(currentAreaTests.map(t => t.id));
+
+  let targetIds = [];
+  if (profile.testIds === "ALL") {
+    targetIds = currentAreaTests.map(t => t.id);
+  } else {
+    targetIds = profile.testIds.filter(id => currentAreaIds.has(id));
+  }
+
+  if (targetIds.length === 0) {
+    return toast("No hay pruebas disponibles para este perfil en el área actual.");
+  }
+
+  const allSelected = targetIds.every(id => selectedTests.has(id));
+
+  if (allSelected) {
+    targetIds.forEach(id => {
+      selectedTests.delete(id);
+      assignedBlocks = assignedBlocks.filter(b => !(b.ids && b.ids.length === 1 && b.ids[0] === id));
+    });
+    assignedBlocks = assignedBlocks.filter(b => b.ids && b.ids.some(id => selectedTests.has(id)));
+  } else {
+    targetIds.forEach(id => {
+      if (!selectedTests.has(id)) {
+        selectedTests.add(id);
+        const testObj = catalog.find(t => t.id === id);
+        const name = testObj ? (testObj.determinacion || testObj.parametro || testObj.nombre) : id;
+        assignedBlocks.push({ type: "Parámetro", name, ids: [id] });
+      }
+    });
+  }
+
+  autosaveDraft();
+  renderQuickProfiles();
+  renderTestTree();
+  renderRequiredSamples();
+}
+
 function renderTestTree() {
-  const query = $("#testSearch").value.trim().toLowerCase();
+  const query = $("#testSearch") ? $("#testSearch").value.trim().toLowerCase() : "";
   const items = catalog.filter((test) =>
     test.activo && test.area === selectedArea &&
     (!query || catalogSearchText(test).includes(query))
   );
 
-  // Calculate frequency counts of tests from state.requests
-  const testFreq = {};
-  state.requests.forEach(req => {
-    if (Array.isArray(req.tests)) {
-      req.tests.forEach(t => {
-        if (t.id) {
-          testFreq[t.id] = (testFreq[t.id] || 0) + 1;
-        }
-      });
-    }
-  });
-
-  // Build hierarchical map: Determination -> Classification -> Test Parameters
-  const detMap = new Map();
+  const groupsMap = new Map();
   items.forEach(test => {
-    const detName = catalogDetermination(test);
-    const clasName = catalogClassification(test);
-    const freq = testFreq[test.id] || 0;
-
-    if (!detMap.has(detName)) {
-      detMap.set(detName, {
-        name: detName,
-        freq: 0,
-        classificationsMap: new Map(),
-        orden: Number(test.orden) || 0
-      });
-    }
-    const detData = detMap.get(detName);
-    detData.freq += freq;
-    if ((Number(test.orden) || 0) < detData.orden) {
-      detData.orden = Number(test.orden) || 0;
-    }
-
-    if (!detData.classificationsMap.has(clasName)) {
-      detData.classificationsMap.set(clasName, {
+    const clasName = catalogClassification(test) || test.categoria || "GENERAL";
+    if (!groupsMap.has(clasName)) {
+      groupsMap.set(clasName, {
         name: clasName,
-        freq: 0,
-        tests: [],
-        orden: Number(test.orden) || 0
+        orden: Number(test.orden) || 0,
+        tests: []
       });
     }
-    const clasData = detData.classificationsMap.get(clasName);
-    clasData.freq += freq;
-    if ((Number(test.orden) || 0) < clasData.orden) {
-      clasData.orden = Number(test.orden) || 0;
+    const group = groupsMap.get(clasName);
+    group.tests.push(test);
+    if ((Number(test.orden) || 0) < group.orden) {
+      group.orden = Number(test.orden) || 0;
     }
-
-    clasData.tests.push({
-      ...test,
-      freq
-    });
   });
 
-  // Sort Determinations by total frequency desc, then by catalog order asc
-  const sortedDets = Array.from(detMap.values()).sort((a, b) => {
-    if (b.freq !== a.freq) return b.freq - a.freq;
+  const sortedGroups = Array.from(groupsMap.values()).sort((a, b) => {
     return a.orden - b.orden || a.name.localeCompare(b.name);
   });
 
@@ -2731,52 +3333,58 @@ function renderTestTree() {
     currentRequest?.tests?.filter(t => t.depurado).map(t => t.id) || []
   );
 
-  const treeHtml = sortedDets.length === 0 ? `<p class="note">No hay pruebas para este filtro.</p>` : `
-    <div class="test-catalog-grid">
-      <div class="catalog-header">
-        <div>DETERMINACION</div>
-        <div>CLASIFICACION</div>
-        <div>PARAMETRO</div>
-      </div>
-      <div class="catalog-body">
-        ${sortedDets.map(det => {
-          // Sort Classifications by total frequency desc, then by catalog order asc
-          const sortedClas = Array.from(det.classificationsMap.values()).sort((a, b) => {
-            if (b.freq !== a.freq) return b.freq - a.freq;
-            return a.orden - b.orden || a.name.localeCompare(b.name);
-          });
-          const isDetActive = assignedBlocks.some(b => b.type === "Determinación" && b.name === det.name);
+  let treeHtml = "";
+  if (sortedGroups.length === 0) {
+    treeHtml = `<div class="opt-empty-state"><p class="note">No hay pruebas que coincidan con la búsqueda.</p></div>`;
+  } else {
+    treeHtml = `
+      <div class="opt-test-tree">
+        ${sortedGroups.map(group => {
+          const groupTestIds = group.tests.map(t => t.id);
+          const selectedInGroup = groupTestIds.filter(id => selectedTests.has(id)).length;
+          const isGroupAllSelected = selectedInGroup === groupTestIds.length && groupTestIds.length > 0;
+
           return `
-            <div class="catalog-row">
-              <div class="det-col">
-                 <button type="button" class="catalog-btn det-btn tree-label ${isDetActive ? 'active' : ''}" data-assign="determinacion" data-name="${escapeAttr(det.name)}">${escapeHtml(det.name)}</button>
+            <div class="opt-category-block">
+              <div class="opt-category-header">
+                <div class="opt-cat-title-wrap">
+                  <span class="opt-cat-title">${escapeHtml(group.name)}</span>
+                  <span class="opt-cat-count">${selectedInGroup}/${group.tests.length}</span>
+                </div>
+                <div class="opt-cat-actions">
+                  <button type="button" class="opt-cat-btn ${isGroupAllSelected ? 'all-active' : ''}" data-action="toggle-group" data-cat-name="${escapeAttr(group.name)}">
+                    ${isGroupAllSelected ? 'Deseleccionar Grupo' : 'Seleccionar Grupo'}
+                  </button>
+                </div>
               </div>
-              <div class="clas-col-container">
-                ${sortedClas.map(clas => {
-                  const isClasActive = assignedBlocks.some(b => b.type === "Clasificación" && b.name === clas.name);
-                  // Sort Parameters by frequency desc, then by catalog order asc
-                  const sortedTestsList = clas.tests.sort((a, b) => {
-                    if (b.freq !== a.freq) return b.freq - a.freq;
-                    return (Number(a.orden) || 0) - (Number(b.orden) || 0) || catalogName(a).localeCompare(catalogName(b));
-                  });
+              <div class="opt-cards-grid">
+                ${group.tests.map(test => {
+                  const isSelected = selectedTests.has(test.id);
+                  const isPurged = purgedTestIds.has(test.id);
+                  const det = (test.determinacion || test.nombre || "").trim();
+                  const param = (test.parametro || test.nombre || "").trim();
+                  const sample = (test.muestra || "SANGRE").trim();
+                  const unit = (test.unidad || "").trim();
+                  
+                  let cardClass = "opt-test-card";
+                  if (isSelected) cardClass += " active";
+                  if (isPurged) cardClass += " purged";
+
                   return `
-                  <div class="clas-row">
-                    <div class="clas-col">
-                      <button type="button" class="catalog-btn clas-btn tree-label ${isClasActive ? 'active' : ''}" data-assign="clasificacion" data-name="${escapeAttr(clas.name)}">${escapeHtml(clas.name)}</button>
+                    <div class="${cardClass}" data-test-id="${escapeAttr(test.id)}" tabindex="0" role="button" aria-pressed="${isSelected}">
+                      <div class="opt-card-body">
+                        <div class="opt-card-header-row">
+                          <span class="opt-card-det">${escapeHtml(det)}</span>
+                          <span class="opt-card-check">✓</span>
+                        </div>
+                        ${param && param !== det ? `<div class="opt-card-param">${escapeHtml(param)}</div>` : ''}
+                        <div class="opt-card-meta">
+                          <span class="opt-badge sample">${escapeHtml(sample)}</span>
+                          ${unit ? `<span class="opt-badge unit">${escapeHtml(unit)}</span>` : ''}
+                          ${isPurged ? `<span class="opt-badge purged">DEPURADO</span>` : ''}
+                        </div>
+                      </div>
                     </div>
-                    <div class="param-col">
-                      ${sortedTestsList.map((test) => {
-                        const isActive = selectedTests.has(test.id);
-                        const isPurged = purgedTestIds.has(test.id);
-                        const label = isPurged ? `${catalogName(test)} [DEPURADO]` : catalogName(test);
-                        const titleAttr = isPurged ? 'title="Esta prueba fue depurada por inactividad"' : '';
-                        const purgedStyle = isPurged ? 'style="border-color: #f87171; text-decoration: line-through; opacity: 0.7;"' : '';
-                        return `
-                        <button type="button" class="catalog-btn param-btn tree-label test-leaf ${isActive ? 'active' : ''}" data-test="${escapeAttr(test.id)}" data-assign="parametro" data-name="${escapeAttr(catalogName(test))}" ${titleAttr} ${purgedStyle}>${escapeHtml(label)}</button>
-                        `;
-                      }).join("")}
-                    </div>
-                  </div>
                   `;
                 }).join("")}
               </div>
@@ -2784,31 +3392,41 @@ function renderTestTree() {
           `;
         }).join("")}
       </div>
-    </div>
-  `;
+    `;
+  }
 
-  assignedBlocks.sort((a, b) => {
-    const testA = catalog.find(t => t.id === a.ids[0]);
-    const testB = catalog.find(t => t.id === b.ids[0]);
-    if (!testA || !testB) return 0;
-    return sortTestsByHierarchy(testA, testB);
-  });
+  const assignedTestsList = [...selectedTests].map(id => catalog.find(t => t.id === id)).filter(Boolean);
+  assignedTestsList.sort(sortTestsByHierarchy);
 
-  const assignedHtml = assignedBlocks.length > 0 ? `
-    <div class="assigned-blocks-panel" style="margin-bottom: 12px; padding: 10px; background: #fdfdfe; border: 1px solid var(--line); border-radius: 6px;">
-      <h3 style="margin: 0 0 8px 0;  color: var(--teal); border-bottom: 1px solid var(--teal-2); padding-bottom: 4px;">Orden de Asignación</h3>
-      <div style="display: grid; gap: 6px;">
-        ${assignedBlocks.map((block, i) => `
-          <div style="display: flex; justify-content: space-between; align-items: center;  padding: 6px 8px; background: #f1f5f7; border-radius: 4px;">
-            <span><strong>${i + 1}.</strong> ${escapeHtml(block.name)}</span>
-            <button type="button" data-remove-block="${i}" style="padding: 4px 8px;  background: #e2e8f0; color: var(--red); border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">Quitar</button>
+  const assignedHtml = assignedTestsList.length > 0 ? `
+    <div class="assigned-blocks-panel" style="margin-bottom: 12px; padding: 12px; background: #ffffff; border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid var(--teal-2); padding-bottom: 6px;">
+        <h3 style="margin: 0; font-size: 0.88rem; color: var(--teal); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+          Pruebas Asignadas (${assignedTestsList.length})
+        </h3>
+        <button type="button" id="clearAllBlocks" style="padding: 4px 10px; font-size: 0.75rem; font-weight: 600; background: #fee2e2; color: #b91c1c; border: none; border-radius: 4px; cursor: pointer; transition: all 0.2s;">
+          Limpiar Todo
+        </button>
+      </div>
+      <div style="display: grid; gap: 6px; max-height: 280px; overflow-y: auto; padding-right: 2px;">
+        ${assignedTestsList.map((test, i) => `
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.82rem;">
+            <div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">
+              <span style="color: var(--teal); font-weight: 700; font-size: 0.75rem; min-width: 18px;">${i + 1}.</span>
+              <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                <strong>${escapeHtml(test.determinacion || test.nombre)}</strong>
+                ${test.parametro && test.parametro !== test.determinacion ? `<span style="color: var(--muted); font-size: 0.75rem; margin-left: 4px;">(${escapeHtml(test.parametro)})</span>` : ''}
+              </div>
+            </div>
+            <button type="button" data-remove-test="${escapeAttr(test.id)}" style="padding: 3px 8px; font-size: 0.75rem; background: #f1f5f9; color: var(--red); border: 1px solid #fecaca; border-radius: 4px; cursor: pointer; font-weight: 600; flex-shrink: 0; margin-left: 6px;">
+              ✕
+            </button>
           </div>
         `).join("")}
       </div>
-      <button type="button" id="clearAllBlocks" style="margin-top: 8px; width: 100%;  font-weight: 600; padding: 8px; background: #fee2e2; color: #b91c1c; border: none; border-radius: 4px; cursor: pointer;">Limpiar todas las asignaciones</button>
     </div>
   ` : `
-    <div class="assigned-blocks-panel" style="padding: 10px; background: #fdfdfe; border: 1px solid var(--line); border-radius: 6px; color: var(--muted);  text-align: center;">
+    <div class="assigned-blocks-panel" style="padding: 14px; background: #ffffff; border: 1px solid var(--line); border-radius: 8px; color: var(--muted); font-size: 0.84rem; text-align: center;">
       Ninguna prueba asignada
     </div>
   `;
@@ -2817,71 +3435,88 @@ function renderTestTree() {
   const container = $("#assignedBlocksContainer");
   if (container) container.innerHTML = assignedHtml;
 
-  const handleAssignClick = (event) => {
-    const removeBtn = event.target.closest("button[data-remove-block]");
-    if (removeBtn) {
-      event.preventDefault(); event.stopPropagation();
-      const index = parseInt(removeBtn.dataset.removeBlock, 10);
-      const block = assignedBlocks[index];
-      block.ids.forEach(id => selectedTests.delete(id));
-      assignedBlocks.splice(index, 1);
-      autosaveDraft();
-      renderTestTree();
-      renderRequiredSamples();
-      return;
-    }
+  renderQuickProfiles();
 
-    if (event.target.id === "clearAllBlocks") {
-      event.preventDefault(); event.stopPropagation();
-      assignedBlocks = [];
-      selectedTests.clear();
-      autosaveDraft();
-      renderTestTree();
-      renderRequiredSamples();
-      return;
-    }
+  $("#testTree").onclick = (event) => {
+    const groupBtn = event.target.closest("button[data-action='toggle-group']");
+    if (groupBtn) {
+      event.preventDefault();
+      event.stopPropagation();
+      const catName = groupBtn.dataset.catName;
+      const groupTests = items.filter(t => (catalogClassification(t) || t.categoria || "GENERAL") === catName);
+      const allSelected = groupTests.every(t => selectedTests.has(t.id));
 
-    const assignBtn = event.target.closest(".tree-label");
-    if (assignBtn) {
-      event.preventDefault(); event.stopPropagation();
-      const type = assignBtn.dataset.assign;
-      const name = assignBtn.dataset.name;
-      let idsToAssign = [];
-
-      if (type === "determinacion") {
-        const detTests = items.filter(t => catalogDetermination(t) === name);
-        idsToAssign = detTests.map(t => t.id).filter(id => !selectedTests.has(id));
-        if (idsToAssign.length === 0) return toast("Pruebas ya asignadas previamente.");
-        assignedBlocks.push({ type: "Determinación", name, ids: idsToAssign });
-      } else if (type === "clasificacion") {
-        const clasTests = items.filter(t => catalogClassification(t) === name);
-        idsToAssign = clasTests.map(t => t.id).filter(id => !selectedTests.has(id));
-        if (idsToAssign.length === 0) return toast("Pruebas ya asignadas previamente.");
-        assignedBlocks.push({ type: "Clasificación", name, ids: idsToAssign });
-      } else if (type === "parametro") {
-        const id = assignBtn.dataset.test;
-        if (selectedTests.has(id)) {
-          selectedTests.delete(id);
-          assignBtn.classList.remove("active");
-          assignedBlocks = assignedBlocks.filter(b => !(b.type === "Parámetro" && b.ids[0] === id));
-          autosaveDraft();
-          renderRequiredSamples();
-          return;
-        } else {
-          idsToAssign = [id];
-          assignedBlocks.push({ type: "Parámetro", name, ids: idsToAssign });
-        }
+      if (allSelected) {
+        groupTests.forEach(t => {
+          selectedTests.delete(t.id);
+          assignedBlocks = assignedBlocks.filter(b => !(b.ids && b.ids.length === 1 && b.ids[0] === t.id));
+        });
+      } else {
+        groupTests.forEach(t => {
+          if (!selectedTests.has(t.id)) {
+            selectedTests.add(t.id);
+            assignedBlocks.push({ type: "Parámetro", name: t.determinacion || t.parametro || t.nombre, ids: [t.id] });
+          }
+        });
       }
 
-      idsToAssign.forEach(id => selectedTests.add(id));
       autosaveDraft();
       renderTestTree();
       renderRequiredSamples();
+      return;
+    }
+
+    const card = event.target.closest(".opt-test-card");
+    if (card) {
+      event.preventDefault();
+      event.stopPropagation();
+      const testId = card.dataset.testId;
+      if (!testId) return;
+
+      if (selectedTests.has(testId)) {
+        selectedTests.delete(testId);
+        assignedBlocks = assignedBlocks.filter(b => !(b.ids && b.ids.length === 1 && b.ids[0] === testId));
+      } else {
+        selectedTests.add(testId);
+        const testObj = catalog.find(t => t.id === testId);
+        const name = testObj ? (testObj.determinacion || testObj.parametro || testObj.nombre) : testId;
+        assignedBlocks.push({ type: "Parámetro", name, ids: [testId] });
+      }
+
+      autosaveDraft();
+      renderTestTree();
+      renderRequiredSamples();
+      return;
     }
   };
 
-  $("#testTree").onclick = handleAssignClick;
-  if (container) container.onclick = handleAssignClick;
+  if (container) {
+    container.onclick = (event) => {
+      const removeBtn = event.target.closest("button[data-remove-test]");
+      if (removeBtn) {
+        event.preventDefault();
+        event.stopPropagation();
+        const testId = removeBtn.dataset.removeTest;
+        selectedTests.delete(testId);
+        assignedBlocks = assignedBlocks.filter(b => !(b.ids && b.ids.length === 1 && b.ids[0] === testId));
+        autosaveDraft();
+        renderTestTree();
+        renderRequiredSamples();
+        return;
+      }
+
+      if (event.target.id === "clearAllBlocks") {
+        event.preventDefault();
+        event.stopPropagation();
+        selectedTests.clear();
+        assignedBlocks = [];
+        autosaveDraft();
+        renderTestTree();
+        renderRequiredSamples();
+        return;
+      }
+    };
+  }
 }
 
 function groupBy(items, keyFn) {
@@ -3455,100 +4090,27 @@ async function renderPatientRows() {
 }
 
 function renderSettingsAccess() {
-  const isNode = state.settings.collabEnabled && state.settings.collabRole === "node";
-  
   const accessPanel = $(".settingsAccess");
   if (accessPanel) {
-    accessPanel.style.display = isNode ? "none" : "";
+    accessPanel.style.display = "none";
   }
-  
   $$(".adminOnly").forEach((section) => {
-    let locked = !settingsUnlocked;
-    
-    // If node, institution and storage forms are always locked
-    if (isNode && (section.id === "institutionForm" || section.id === "storageForm")) {
-      locked = true;
-    }
-    
-    section.classList.toggle("lockedPanel", locked);
-    
+    section.classList.remove("lockedPanel");
     section.querySelectorAll("input, select, button").forEach((control) => {
-      if (control.id === "selectSyncFolderBtn" || control.id === "restoreFolderAccessBtn") {
-        control.disabled = false;
-        return;
-      }
-      control.disabled = locked;
+      control.disabled = false;
     });
   });
-  
-  // Override for Connected Unit (node) collaboration form controls
-  if (isNode) {
-    const collabForm = $("#collabForm");
-    if (collabForm) {
-      collabForm.classList.remove("lockedPanel");
-      
-      const enabledOnNode = [
-        "#collabEnabled",
-        "#collabTerminalName",
-        "#collabTokenInput",
-        "#connectCollabTokenBtn"
-      ];
-      enabledOnNode.forEach(selector => {
-        const el = $(selector);
-        if (el) el.disabled = false;
-      });
-      
-      const roleSelect = $("#collabRole");
-      if (roleSelect) roleSelect.disabled = backendReady;
-      
-      const submitBtn = collabForm.querySelector("button[type='submit']");
-      if (submitBtn) submitBtn.disabled = true;
-    }
-    
-    $$(".panel.adminOnly").forEach(panel => {
-      const h2 = panel.querySelector("h2");
-      if (h2 && h2.textContent.includes("Administracion tecnica")) {
-        panel.classList.add("lockedPanel");
-        panel.querySelectorAll("input, select, button").forEach(control => {
-          if (control.id !== "viewSyncLog") {
-            control.disabled = true;
-          } else {
-            control.disabled = false;
-          }
-        });
-      }
-      if (h2 && h2.textContent.includes("Zona de Peligro")) {
-        panel.classList.add("lockedPanel");
-        panel.querySelectorAll("input, select, button").forEach(control => {
-          control.disabled = true;
-        });
-      }
-    });
-  }
-  
-  $("#settingsLockState").textContent = settingsUnlocked ? "Desbloqueado" : "Bloqueado";
-  $("#settingsLockState").classList.toggle("ok", settingsUnlocked);
 }
 
 function unlockSettings() {
-  const user = $("#adminUser").value.trim();
-  const password = $("#adminPassword").value;
-  sha256Text(password).then((hash) => {
-    if (user !== ADMIN_CREDENTIALS.user || hash !== ADMIN_CREDENTIALS.passwordHash) {
-      toast("Usuario o contrasena incorrectos.");
-      return;
-    }
-    settingsUnlocked = true;
-    renderSettingsAccess();
-    toast("Configuracion desbloqueada.");
-  });
+  settingsUnlocked = true;
+  renderSettingsAccess();
+  toast("Configuración disponible.");
 }
 
 function lockSettings() {
-  settingsUnlocked = false;
-  $("#adminPassword").value = "";
+  settingsUnlocked = true;
   renderSettingsAccess();
-  toast("Configuracion bloqueada.");
 }
 
 function loadRequest(index, isEdit = true) {
@@ -4046,6 +4608,7 @@ function renderWorklist() {
         <h3>FECHA: ${escapeHtml(date)}</h3>
         ${Array.from(patientGroups.entries()).map(([key, pItems]) => {
           const req = pItems[0].req;
+          const reqIndex = pItems[0].reqIndex;
           const [name, code, aux] = key.split("|");
           
           const printItems = pItems.filter(({ test }) => {
@@ -4059,10 +4622,20 @@ function renderWorklist() {
           return `
             <div class="workPatientBlock${noPrintClass}">
               <div class="workPatientHeader" style="display:flex; flex-direction:column; gap:4px; padding-bottom:8px;">
-                <div style="font-weight:bold;  margin-bottom:4px; border-bottom:1px solid rgba(0,0,0,0.1); padding-bottom:4px;">
-                  ${escapeHtml(name)} - ${escapeHtml(code)} - ${escapeHtml(aux || "Sin código aux.")}
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:4px; border-bottom:1px solid rgba(0,0,0,0.1); padding-bottom:6px;">
+                  <div style="font-weight:bold; font-size:0.92rem; color: #0f172a;">
+                    ${escapeHtml(name)} - ${escapeHtml(code)} - ${escapeHtml(aux || "Sin código aux.")}
+                  </div>
+                  <div class="patient-quick-actions noPrint">
+                    <button type="button" class="btn-quick-action btn-quick-edit" data-action="edit-patient" data-req="${reqIndex}" title="Editar datos y determinaciones del paciente">
+                      ✏️ Editar Paciente
+                    </button>
+                    <button type="button" class="btn-quick-action btn-quick-print" data-action="print-patient-report" data-req="${reqIndex}" title="Imprimir informe de resultados individual">
+                      🖨️ Imprimir Reporte
+                    </button>
+                  </div>
                 </div>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;  font-weight:normal;">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; font-weight:normal;">
                   <div>
                     <strong style="color:var(--teal)">Datos del paciente</strong><br>
                     Edad: ${escapeHtml(req.age || "---")} | Género: ${escapeHtml(req.gender || "---")} | Seguro: ${escapeHtml(req.insuranceCode || "---")}
@@ -4077,13 +4650,13 @@ function renderWorklist() {
                 ${splitTests(pItems, 2).map((tests) => `
                   <table class="workTableCompact">
                     <thead><tr><th>Determinacion</th><th>Parametro</th><th>Unidad</th><th>Resultado</th><th>Observaciones</th></tr></thead>
-                    <tbody>${tests.map(({ reqIndex, test, testIndex }, index) => `
+                    <tbody>${tests.map(({ reqIndex: rIdx, test, testIndex }, index) => `
                       <tr>
                         <td style="font-weight: 600; color: var(--teal);">${index === 0 || requestDetermination(test) !== requestDetermination(tests[index - 1].test) ? escapeHtml(requestDetermination(test)) : ""}</td>
                         <td>${escapeHtml(requestParameter(test))}</td>
                         <td>${escapeHtml(requestUnit(test) || "---")}</td>
-                        <td><input data-req="${reqIndex}" data-test="${testIndex}" data-field="result" value="${escapeAttr(test.result)}" placeholder="..." /></td>
-                        <td><input data-req="${reqIndex}" data-test="${testIndex}" data-field="notes" value="${escapeAttr(test.notes)}" placeholder="..." /></td>
+                        <td><input data-req="${rIdx}" data-test="${testIndex}" data-field="result" value="${escapeAttr(test.result)}" placeholder="..." /></td>
+                        <td><input data-req="${rIdx}" data-test="${testIndex}" data-field="notes" value="${escapeAttr(test.notes)}" placeholder="..." /></td>
                       </tr>
                     `).join("")}</tbody>
                   </table>
@@ -4093,7 +4666,7 @@ function renderWorklist() {
                 ${splitTests(printItems, 2).map((tests) => `
                   <table class="workTableCompact">
                     <thead><tr><th>Determinacion</th><th>Parametro</th><th>Unidad</th><th>Resultado</th></tr></thead>
-                    <tbody>${tests.map(({ reqIndex, test, testIndex }, index) => `
+                    <tbody>${tests.map(({ reqIndex: rIdx, test, testIndex }, index) => `
                       <tr>
                         <td style="font-weight: 600; color: var(--teal);">${index === 0 || requestDetermination(test) !== requestDetermination(tests[index - 1].test) ? escapeHtml(requestDetermination(test)) : ""}</td>
                         <td>${escapeHtml(requestParameter(test))}</td>
@@ -4114,6 +4687,23 @@ function renderWorklist() {
       </div>
     `;
   }).sort().reverse().join("") || `<p class="note">No hay datos para la lista seleccionada.</p>`;
+
+  $("#workRows").onclick = (event) => {
+    const editBtn = event.target.closest("button[data-action='edit-patient']");
+    if (editBtn) {
+      event.preventDefault();
+      event.stopPropagation();
+      editPatientFromAnywhere(editBtn.dataset.req);
+      return;
+    }
+    const printBtn = event.target.closest("button[data-action='print-patient-report']");
+    if (printBtn) {
+      event.preventDefault();
+      event.stopPropagation();
+      printSinglePatientReport(printBtn.dataset.req);
+      return;
+    }
+  };
 
   $("#workRows").onchange = (event) => {
     const input = event.target.closest("[data-field]");
@@ -4217,16 +4807,87 @@ function groupedNotes(tests) {
   return notes.length ? notes.join(" | ") : "Sin observaciones.";
 }
 
-function renderLabHeader(title = "", printOnly = false) {
+const CODE128_PATTERNS = [
+  "212222","222122","222221","121223","121322","131222","122213","122312","132212","221213",
+  "221312","231212","112232","122132","122231","113222","123122","123221","223211","221132",
+  "221231","213212","223112","312131","311222","321122","321221","312212","322112","322211",
+  "212123","212321","232121","111323","131123","131321","112313","132113","132311","211313",
+  "231113","231311","112133","112331","132131","113123","113321","133121","313121","211331",
+  "231131","213113","213311","213131","311123","311321","331121","312113","312311","332111",
+  "314111","221411","431111","111224","111422","121124","121421","141122","141221","112214",
+  "112412","122114","122411","142112","142211","241211","221114","413111","241112","134111",
+  "111242","121142","121241","114212","124112","124211","411212","421112","421211","212141",
+  "214121","412121","111143","111341","131141","114113","114311","411113","411311","113141",
+  "114131","311141","411131","211412","211214","211232","2331112"
+];
+
+function generateBarcode128Svg(text, height = 22) {
+  if (!text) return "";
+  const cleanText = String(text).trim();
+  if (!cleanText) return "";
+
+  const textCodes = [];
+  let checksum = 104;
+  for (let i = 0; i < cleanText.length; i++) {
+    const code = cleanText.charCodeAt(i);
+    const val = (code >= 32 && code <= 126) ? code - 32 : 0;
+    textCodes.push(val);
+    checksum += val * (i + 1);
+  }
+  checksum = checksum % 103;
+
+  const allCodes = [104, ...textCodes, checksum, 106];
+  let patternStr = "";
+  for (const c of allCodes) {
+    patternStr += (CODE128_PATTERNS[c] || "");
+  }
+
+  let totalWidth = 0;
+  const rects = [];
+  let isBar = true;
+  for (let i = 0; i < patternStr.length; i++) {
+    const width = parseInt(patternStr[i], 10);
+    if (isBar) {
+      rects.push(`<rect x="${totalWidth}" y="0" width="${width}" height="${height}" fill="#0f172a" />`);
+    }
+    totalWidth += width;
+    isBar = !isBar;
+  }
+
+  const quietZone = 4;
+  const viewBoxWidth = totalWidth + (quietZone * 2);
+  return `<svg class="barcodeSvg" viewBox="0 0 ${viewBoxWidth} ${height}" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><g transform="translate(${quietZone}, 0)">${rects.join("")}</g></svg>`;
+}
+
+function renderLabHeader(title = "", printOnly = false, req = null) {
+  const logoSrc = state.settings.logo || "assets/icon.svg";
+  const inst = (state.settings.institution && state.settings.institution !== "Institucion") ? state.settings.institution : "CAJA NACIONAL DE SALUD";
+  const fac = (state.settings.healthFacility && state.settings.healthFacility !== "Establecimiento de Salud") ? state.settings.healthFacility : "HOSPITAL DE ESPECIALIDADES MATERNO INFANTIL";
+  const lab = (state.settings.lab && state.settings.lab !== "Laboratorio clinico") ? state.settings.lab : "AREA DE ENDOCRINOLOGIA Y MARCADORES TUMORALES";
+  const sub = [state.settings.labAreas, state.settings.address, state.settings.phone].filter(Boolean).join(" - ");
+  
+  let barcodeHtml = "";
+  if (req && req.code) {
+    const barcodeSvg = generateBarcode128Svg(req.code, 20);
+    barcodeHtml = `
+      <div class="reportBarcodeBox">
+        <div class="barcodeAuxLabel">AUX: <strong>${escapeHtml(req.auxCode || "---")}</strong></div>
+        ${barcodeSvg}
+        <div class="barcodeCodeLabel">${escapeHtml(req.code)}</div>
+      </div>
+    `;
+  }
+
   return `
     <header class="reportHeader${printOnly ? ' printOnly' : ''}">
-      ${state.settings.logo ? `<img src="${state.settings.logo}" alt="" />` : ""}
+      <img src="${logoSrc}" alt="Logo Institucional" />
       <div style="flex: 1;">
-        <h3>${escapeHtml(state.settings.institution || "Institucion")}</h3>
-        <p>${escapeHtml(state.settings.healthFacility || "Establecimiento de Salud")}</p>
-        <p>${escapeHtml(state.settings.lab || "Laboratorio clinico")}</p>
-        <p>${escapeHtml([state.settings.labAreas, state.settings.address, state.settings.phone].filter(Boolean).join(" - "))}</p>
+        <h3>${escapeHtml(inst)}</h3>
+        <p>${escapeHtml(fac)}</p>
+        <p>${escapeHtml(lab)}</p>
+        ${sub ? `<p>${escapeHtml(sub)}</p>` : ""}
       </div>
+      ${barcodeHtml}
       ${title ? `<div class="reportTitle">${escapeHtml(title)}</div>` : ""}
     </header>
   `;
@@ -4258,31 +4919,30 @@ function sortTestsForReport(a, b) {
     .localeCompare([requestClassification(b), requestParameter(b)].join("|"));
 }
 
-function renderReports() {
-  const items = reportItems();
-  $("#reportList").innerHTML = items.map((req) => {
-    const visibleTests = (req.tests || []).filter(test => {
-      if (test.depurado) return false;
-      const catalogItem = catalog.find(c => c.id === test.id) || {};
-      const area = catalogItem.area || test.area || "";
-      if (state.settings.outsourceAreas.includes(area)) return false;
-      
-      const hasData = (test.result && test.result.trim() !== "") || (test.notes && test.notes.trim() !== "");
-      let daysOld = 0;
-      if (req.date) {
-        const [y, m, d] = req.date.split("-").map(Number);
-        const reqDate = new Date(y, m - 1, d);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        daysOld = (today - reqDate) / (1000 * 60 * 60 * 24);
-      }
-      if (!hasData && daysOld > 5) return false;
-      
-      return true;
-    });
-    return `
-    <article class="report">
-      ${renderLabHeader()}
+function editPatientFromAnywhere(reqIndex) {
+  const index = Number(reqIndex);
+  if (isNaN(index) || index < 0 || !state.requests[index]) {
+    return toast("No se encontró el paciente para editar.");
+  }
+  loadRequest(index, true);
+  showView("dashboard");
+  toast("Paciente cargado en el formulario.");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function renderSingleReportHtml(req) {
+  if (!req) return "";
+  const visibleTests = (req.tests || []).filter(test => {
+    if (test.depurado) return false;
+    const catalogItem = catalog.find(c => c.id === test.id) || {};
+    const area = catalogItem.area || test.area || "";
+    if (state.settings.outsourceAreas.includes(area)) return false;
+    return true;
+  });
+
+  return `
+    <article class="report" style="border:none; box-shadow:none; padding:0; margin:0;">
+      ${renderLabHeader("", false, req)}
       <div class="patientHeader compactHeader">
         <div class="formSubtitle">Datos del paciente</div>
         <span><strong>Paciente:</strong> ${escapeHtml(req.name)}</span>
@@ -4352,10 +5012,187 @@ function renderReports() {
             return html;
           }).join("")}</tbody>
         </table>
-      `}).join("")}</div>
-      <div class="reportObservations"><strong>Observaciones:</strong> ${escapeHtml(groupedNotes(visibleTests))}</div>
+        `;
+      }).join("")}</div>
+      ${(() => {
+        const notesHtml = groupedNotes(visibleTests);
+        return notesHtml !== "Sin observaciones." ? `<div class="reportObservations" style="margin-top: 6px;"><strong>Observaciones Clínicas:</strong> ${escapeHtml(notesHtml)}</div>` : "";
+      })()}
+      <div class="reportSignatures">
+        <div>Firma y Sello del Bioquímico</div>
+        <div>Firma y Sello del Responsable de Área</div>
+      </div>
+      <div class="reportPrintFooter">
+        <span>Emitido: ${escapeHtml(reportDateTime(req))}</span>
+        <span style="font-weight: 700;">Página 1 de 1</span>
+      </div>
+    </article>
+  `;
+}
+
+function printSinglePatientReport(reqIndex) {
+  const index = Number(reqIndex);
+  if (isNaN(index) || index < 0 || !state.requests[index]) {
+    return toast("No se encontró el reporte para imprimir.");
+  }
+  const req = state.requests[index];
+
+  let printContainer = $("#singleReportPrintContainer");
+  if (!printContainer) {
+    printContainer = document.createElement("div");
+    printContainer.id = "singleReportPrintContainer";
+    document.body.appendChild(printContainer);
+  }
+
+  printContainer.innerHTML = renderSingleReportHtml(req);
+  document.body.dataset.printMode = "singleReport";
+
+  setTimeout(() => {
+    window.print();
+    setTimeout(() => {
+      delete document.body.dataset.printMode;
+      if (printContainer) printContainer.innerHTML = "";
+    }, 500);
+  }, 100);
+}
+
+function renderReports() {
+  const items = reportItems();
+  $("#reportList").innerHTML = items.map((req) => {
+    const actualIndex = state.requests.findIndex(r => r.code === req.code && r.date === req.date);
+    const targetIndex = actualIndex !== -1 ? actualIndex : 0;
+    const visibleTests = (req.tests || []).filter(test => {
+      if (test.depurado) return false;
+      const catalogItem = catalog.find(c => c.id === test.id) || {};
+      const area = catalogItem.area || test.area || "";
+      if (state.settings.outsourceAreas.includes(area)) return false;
+      
+      const hasData = (test.result && test.result.trim() !== "") || (test.notes && test.notes.trim() !== "");
+      let daysOld = 0;
+      if (req.date) {
+        const [y, m, d] = req.date.split("-").map(Number);
+        const reqDate = new Date(y, m - 1, d);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        daysOld = (today - reqDate) / (1000 * 60 * 60 * 24);
+      }
+      if (!hasData && daysOld > 5) return false;
+      
+      return true;
+    });
+    return `
+    <article class="report">
+      <div class="report-card-actions noPrint">
+        <button type="button" class="btn-quick-action btn-quick-edit" data-action="edit-patient" data-req="${targetIndex}" title="Editar paciente y pruebas">
+          ✏️ Editar Paciente
+        </button>
+        <button type="button" class="btn-quick-action btn-quick-print" data-action="print-patient-report" data-req="${targetIndex}" title="Imprimir este reporte individual">
+          🖨️ Imprimir Reporte
+        </button>
+      </div>
+      ${renderLabHeader("", false, req)}
+      <div class="patientHeader compactHeader">
+        <div class="formSubtitle">Datos del paciente</div>
+        <span><strong>Paciente:</strong> ${escapeHtml(req.name)}</span>
+        <span><strong>Edad:</strong> ${escapeHtml(req.age)}</span>
+        <span><strong>Género:</strong> ${escapeHtml(req.gender)}</span>
+        <span><strong>Seguro:</strong> ${escapeHtml(req.insuranceCode || "---")}</span>
+        
+        <div class="formSubtitle">Datos del servicio</div>
+        <span><strong>Servicio:</strong> ${escapeHtml(req.service || "---")}</span>
+        <span><strong>Médico:</strong> ${escapeHtml(req.doctor || "---")}</span>
+        <span><strong>Cama:</strong> ${escapeHtml(req.bed || "---")}</span>
+        
+        <div class="formSubtitle">Identificación</div>
+        <span><strong>Auxiliar:</strong> ${escapeHtml(req.auxCode || "---")}</span>
+        <span><strong>Fecha:</strong> ${escapeHtml(req.date)}</span>
+        <span><strong>Código Registro:</strong> ${escapeHtml(req.code)}</span>
+        <span><strong>Reportado:</strong> ${escapeHtml(reportDateTime(req))}</span>
+      </div>
+      <div class="reportResultsGrid">${splitTests(visibleTests.sort(sortTestsForReport)).map((tests) => {
+        let prevArea = null;
+        let prevDet = null;
+        return `
+        <table class="compactReportTable">
+          <thead><tr><th>Determinacion</th><th>Parametro</th><th>Resultado</th><th>Unidad</th><th>Referencia</th></tr></thead>
+          <tbody>${tests.map((test, index) => {
+            const catalogItem = catalog.find(c => c.id === test.id) || {};
+            const area = catalogItem.area || test.area || "GENERAL";
+            const areaNorm = area.trim().toUpperCase();
+            
+            const showAreaHeader = (index === 0 || areaNorm !== prevArea);
+            if (showAreaHeader) {
+              prevDet = null;
+            }
+            
+            const showDet = (index === 0 || showAreaHeader || requestDetermination(test) !== prevDet);
+            
+            prevArea = areaNorm;
+            prevDet = requestDetermination(test);
+            
+            const testsInArea = tests.filter(t => {
+              const cItem = catalog.find(c => c.id === t.id) || {};
+              const tArea = cItem.area || t.area || "GENERAL";
+              return tArea.trim().toUpperCase() === areaNorm;
+            });
+            const allEmpty = testsInArea.every(t => !t.result && !t.notes);
+            
+            let html = "";
+            if (showAreaHeader) {
+              html += `
+                <tr class="area-header-row ${allEmpty ? 'empty-test' : ''}">
+                  <td colspan="5" class="report-area-title" style="font-weight: 700; color: var(--teal); background-color: var(--teal-2); padding: 4px 6px !important; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; border-bottom: 1.5px solid var(--teal) !important;">
+                    ${escapeHtml(areaNorm)}
+                  </td>
+                </tr>
+              `;
+            }
+            
+            html += `
+              <tr class="${!test.result && !test.notes ? 'empty-test' : ''}">
+                <td style="font-weight: 600; color: var(--teal);">${showDet ? escapeHtml(requestDetermination(test)) : ""}</td>
+                <td>${escapeHtml(requestParameter(test))}</td>
+                <td>${escapeHtml(test.result || "---")}</td>
+                <td>${escapeHtml(requestUnit(test) || "---")}</td>
+                <td>${escapeHtml(requestReference(test) || "---")}</td>
+              </tr>
+            `;
+            return html;
+          }).join("")}</tbody>
+        </table>
+        `;
+      }).join("")}</div>
+      ${(() => {
+        const notesHtml = groupedNotes(visibleTests);
+        return notesHtml !== "Sin observaciones." ? `<div class="reportObservations" style="margin-top: 6px;"><strong>Observaciones Clínicas:</strong> ${escapeHtml(notesHtml)}</div>` : "";
+      })()}
+      <div class="reportSignatures">
+        <div>Firma y Sello del Bioquímico</div>
+        <div>Firma y Sello del Responsable de Área</div>
+      </div>
+      <div class="reportPrintFooter">
+        <span>Emitido: ${escapeHtml(reportDateTime(req))}</span>
+        <span style="font-weight: 700;">Página 1 de 1</span>
+      </div>
     </article>
   `; }).join("") || `<p class="note">No hay reportes para mostrar.</p>`;
+
+  $("#reportList").onclick = (event) => {
+    const editBtn = event.target.closest("button[data-action='edit-patient']");
+    if (editBtn) {
+      event.preventDefault();
+      event.stopPropagation();
+      editPatientFromAnywhere(editBtn.dataset.req);
+      return;
+    }
+    const printBtn = event.target.closest("button[data-action='print-patient-report']");
+    if (printBtn) {
+      event.preventDefault();
+      event.stopPropagation();
+      printSinglePatientReport(printBtn.dataset.req);
+      return;
+    }
+  };
 }
 
 function previewLogo(event) {
@@ -4371,57 +5208,38 @@ function previewLogo(event) {
 
 function saveInstitution(event) {
   event.preventDefault();
-  if (!isAdmin()) return toast("Acceso denegado. Desbloquee la configuracion como administrador.");
   if (!canWrite("La licencia esta restringida; solo puede consultar datos.")) return;
   const form = event.currentTarget;
   const data = Object.fromEntries(new FormData(form).entries());
   delete data.logo;
   Object.assign(state.settings, data, { initialized: true });
-  applyTheme(state.settings.themeColor);
-  const logo = form.logo.files[0];
+  if (form.printPaperSize) {
+    state.settings.printPaperSize = form.printPaperSize.value || "media_carta";
+  }
+  applyTheme(state.settings.themeColor || "#1f7a4d");
+  applyPaperSize(state.settings.printPaperSize);
+  const logo = form.logo ? form.logo.files[0] : null;
   if (!logo) {
+    if (!state.settings.logo) state.settings.logo = "assets/icon.svg";
     saveAll();
     renderAll();
-    return toast("Identidad guardada.");
+    return toast("Identidad institucional guardada.");
   }
   const reader = new FileReader();
   reader.onload = () => {
     state.settings.logo = reader.result;
     saveAll();
     renderAll();
-    toast("Identidad y logo guardados.");
+    toast("Identidad y logo institucional guardados.");
   };
   reader.readAsDataURL(logo);
 }
 
 function saveStorage(event) {
-  event.preventDefault();
-  if (!isAdmin()) return toast("Acceso denegado. Desbloquee la configuracion como administrador.");
-  if (!canWrite("La licencia esta restringida; no se puede cambiar la configuracion.")) return;
-  const data = Object.fromEntries(new FormData(event.currentTarget).entries());
-  state.settings.cloudUrl = data.cloudUrl || "";
-  state.settings.cloudProvider = data.cloudProvider || "";
-  state.settings.token_api = data.token_api || "";
-  state.settings.localAccepted = true;
-  
-  if (backendReady) {
-    if (!isValidCloudUrl(state.settings.cloudUrl)) {
-      toast("Ingrese un enlace valido de Google Drive, OneDrive u otra ubicacion online.");
-      renderBackupStatus();
-      return;
-    }
-    state.settings.initialized = true;
-    saveAll();
-    api("/api/sync-config", {
-      method: "POST",
-      body: JSON.stringify({ link_carpeta: state.settings.cloudUrl, token_api: state.settings.token_api })
-    }).then((result) => updateSyncIndicator(result.syncStatus)).catch(() => updateSyncIndicator({ estado: "offline", texto: "Sin conexion - Trabajando en modo offline" }));
-  } else {
-    state.settings.initialized = true;
-    saveAll();
-  }
+  if (event) event.preventDefault();
+  saveAll();
   renderAll();
-  toast("Almacenamiento guardado.");
+  toast("Configuración guardada.");
 }
 
 function isValidCloudUrl(value) {
@@ -4442,40 +5260,17 @@ function backupDue() {
 }
 
 function renderBackupStatus() {
-  const isNode = state.settings.collabEnabled && state.settings.collabRole === "node";
-  const backupWindowEl = document.querySelector(".backupWindow");
-  const registerBackupBtn = document.getElementById("registerBackup");
-  
-  if (isNode) {
-    if (backupWindowEl) backupWindowEl.style.display = "none";
-    if (registerBackupBtn) registerBackupBtn.style.display = "none";
-    $("#backupStatus").innerHTML = `
-      <strong>Unidad Conectada (Cliente)</strong>
-      <span>Los respaldos y la licencia son gestionados por la Unidad Principal.</span>
-    `;
-    $("#backupStatus").className = "backupStatus info";
-    return;
-  } else {
-    if (backupWindowEl) backupWindowEl.style.display = "block";
-    if (registerBackupBtn) registerBackupBtn.style.display = "inline-block";
-  }
-
-  const hasLink = isValidCloudUrl(state.settings.cloudUrl);
-  const due = backupDue();
-  $("#backupStatus").innerHTML = `
-    <strong>${hasLink ? "Enlace online configurado" : "Falta enlace online obligatorio"}</strong>
-    <span>${due ? "Respaldo bimestral pendiente o vencido." : "Respaldo bimestral al dia."}</span>
-  `;
-  $("#backupStatus").className = "backupStatus";
-  $("#backupStatus").classList.toggle("warning", !hasLink || due);
   const backups = state.settings.backups || [];
-  $("#backupHistory").innerHTML = backups.length
-    ? backups.slice().reverse().map((item) => `<div><strong>${escapeHtml(formatDateTime(item.date))}</strong><span>${escapeHtml(item.link)}</span></div>`).join("")
-    : `<p class="note">Aun no hay respaldos registrados.</p>`;
+  const historyEl = $("#backupHistory");
+  if (historyEl) {
+    historyEl.innerHTML = backups.length
+      ? backups.slice().reverse().map((item) => `<div><strong>${escapeHtml(formatDateTime(item.date))}</strong><span>${escapeHtml(item.link || "Respaldo local")}</span></div>`).join("")
+      : `<p class="note">Aún no hay respaldos registrados.</p>`;
+  }
 }
 
 function isAdmin() {
-  return settingsUnlocked;
+  return true;
 }
 
 function refreshSystem() {
@@ -4503,11 +5298,6 @@ function registerOnlineBackup() {
 
 function exportExcelWorkbook() {
   refreshSystem();
-  if (!isValidCloudUrl(state.settings.cloudUrl)) {
-    toast("Recuerde configurar el enlace online obligatorio antes de exportar.");
-  } else if (backupDue()) {
-    toast("Respaldo bimestral pendiente: registre el respaldo online despues de exportar.");
-  }
   
   const dateFrom = $("#exportDateFrom") ? $("#exportDateFrom").value : "";
   const dateTo = $("#exportDateTo") ? $("#exportDateTo").value : "";
@@ -5505,61 +6295,32 @@ function bindOutsourceControls() {
   }
 }
 
-function bindOutsourceSubmenu() {
+function bindWorklistSubmenu() {
   const workBtn = $("#subviewWorklistBtn");
-  const outsourceBtn = $("#subviewOutsourceBtn");
   const epidemiologyBtn = $("#subviewEpidemiologyBtn");
   
   const workPanel = $("#internalWorklistPanel");
-  const outsourcePanel = $("#outsourceWorklistPanel");
   const epidemiologyPanel = $("#epidemiologyWorklistPanel");
   
-  if (!workBtn || !outsourceBtn) return;
+  if (!workBtn) return;
   
   workBtn.onclick = () => {
     workBtn.classList.add("active");
-    outsourceBtn.classList.remove("active");
     if (epidemiologyBtn) epidemiologyBtn.classList.remove("active");
-    workPanel.hidden = false;
-    outsourcePanel.hidden = true;
+    if (workPanel) workPanel.hidden = false;
     if (epidemiologyPanel) epidemiologyPanel.hidden = true;
     renderWorklist();
-  };
-  
-  outsourceBtn.onclick = () => {
-    outsourceBtn.classList.add("active");
-    workBtn.classList.remove("active");
-    if (epidemiologyBtn) epidemiologyBtn.classList.remove("active");
-    workPanel.hidden = true;
-    outsourcePanel.hidden = false;
-    if (epidemiologyPanel) epidemiologyPanel.hidden = true;
-    renderOutsourceWorklist();
   };
   
   if (epidemiologyBtn) {
     epidemiologyBtn.onclick = () => {
       epidemiologyBtn.classList.add("active");
       workBtn.classList.remove("active");
-      outsourceBtn.classList.remove("active");
-      workPanel.hidden = true;
-      outsourcePanel.hidden = true;
+      if (workPanel) workPanel.hidden = true;
       if (epidemiologyPanel) epidemiologyPanel.hidden = false;
       fillEpidemiologyParameterSelect();
       renderEpidemiologyWorklist();
     };
-  }
-  
-  ["outsourceDateFrom", "outsourceDateTo"].forEach(id => {
-    const el = $(`#${id}`);
-    if (el) {
-      el.addEventListener("change", renderOutsourceWorklist);
-      el.addEventListener("input", renderOutsourceWorklist);
-    }
-  });
-
-  const printOutsourceBtn = $("#printOutsourceBtn");
-  if (printOutsourceBtn) {
-    printOutsourceBtn.onclick = () => window.print();
   }
   
   ["epidemiologyDateFrom", "epidemiologyDateTo", "epidemiologyParameterSelect"].forEach(id => {

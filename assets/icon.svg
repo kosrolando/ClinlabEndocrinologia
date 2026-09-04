@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%">
+  <defs>
+    <linearGradient id="cnsGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1f7a4d" />
+      <stop offset="100%" stop-color="#125232" />
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34d399" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+    <filter id="dropShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <!-- Background Shield / Hexagon -->
+  <rect x="4" y="4" width="112" height="112" rx="26" fill="url(#cnsGrad)" filter="url(#dropShadow)" />
+  <rect x="8" y="8" width="104" height="104" rx="22" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="2" />
+
+  <!-- Medical Cross Base -->
+  <path d="M52 26 H68 V46 H88 V62 H68 V82 H52 V62 H32 V46 H52 Z" fill="#ffffff" opacity="0.95" />
+
+  <!-- Laboratory Flask & Endocrinology/Tumor Marker Iconography Overlay -->
+  <!-- Flask Silhouette -->
+  <path d="M55 42 L55 52 L42 74 C40 77 42 81 46 81 H74 C78 81 80 77 78 74 L65 52 L65 42 Z" fill="#10b981" />
+  <path d="M54 40 H66 V44 H54 Z" fill="#ffffff" />
+  
+  <!-- Liquid in Flask -->
+  <path d="M47 68 Q60 63 73 68 L76 73 C77.5 75.5 76 78 73 78 H47 C44 78 42.5 75.5 44 73 Z" fill="url(#cnsGrad)" />
+  
+  <!-- Endocrinology / DNA / Molecule bubbles -->
+  <circle cx="53" cy="72" r="2.2" fill="#a7f3d0" />
+  <circle cx="63" cy="70" r="3" fill="#ffffff" opacity="0.9" />
+  <circle cx="58" cy="65" r="1.8" fill="#34d399" />
+
+  <!-- CNS Arc Indicator -->
+  <path d="M26 60 A34 34 0 0 1 94 60" fill="none" stroke="#6ee7b7" stroke-width="3" stroke-linecap="round" stroke-dasharray="4 6" opacity="0.8" />
+
+  <!-- Bottom Label Pill -->
+  <rect x="22" y="89" width="76" height="18" rx="9" fill="#ffffff" />
+  <text x="60" y="102" font-family="'Montserrat', 'Arial', sans-serif" font-size="8.5" font-weight="800" fill="#125232" text-anchor="middle" letter-spacing="1.5">CNS • MATERNO</text>
+</svg>

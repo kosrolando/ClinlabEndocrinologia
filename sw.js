@@ -1,12 +1,11 @@
-const CACHE = "clinlab-suite-v33";
+const CACHE = "clinlab-suite-v35";
 const ASSETS = [
   "./",
   "./index.html",
   "./styles.css",
   "./app.js",
   "./manifest.json",
-  "./assets/icon.svg",
-  "./data/catalogo.json"
+  "./assets/icon.svg"
 ];
 
 self.addEventListener("install", (event) => {
