@@ -797,24 +797,24 @@ tr.dragging {
 }
 
 .reportResultsGrid {
-  display: grid !important;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
+  display: block;
   width: 100%;
 }
 
 .reportResultsGrid > * {
   min-width: 0;
+  width: 100%;
 }
 
 .compactReportTable {
   width: 100%;
   border-collapse: collapse;
   font-variant-numeric: tabular-nums;
+  table-layout: fixed;
 }
 
 .compactReportTable th {
-  padding: 1px 4px !important;
+  padding: 4px 6px !important;
   text-align: left;
   font-weight: 700;
   vertical-align: middle;
@@ -823,11 +823,38 @@ tr.dragging {
 .compactReportTable td {
   border: none;
   border-bottom: 1px solid var(--line);
-  padding: 1px 4px !important;
+  padding: 4px 6px !important;
   vertical-align: middle;
   overflow-wrap: break-word;
   white-space: normal;
-  line-height: 0.95;
+  line-height: 1.2;
+}
+
+.compactReportTable th:nth-child(1),
+.compactReportTable td:nth-child(1) {
+  width: 18%;
+}
+
+.compactReportTable th:nth-child(2),
+.compactReportTable td:nth-child(2) {
+  width: 22%;
+}
+
+.compactReportTable th:nth-child(3),
+.compactReportTable td:nth-child(3) {
+  width: 14%;
+  font-weight: 700;
+}
+
+.compactReportTable th:nth-child(4),
+.compactReportTable td:nth-child(4) {
+  width: 10%;
+}
+
+.compactReportTable th:nth-child(5),
+.compactReportTable td:nth-child(5) {
+  width: 36%;
+  line-height: 1.25;
 }
 
 .reportObservations {
@@ -1414,16 +1441,13 @@ tr.dragging {
   }
 
   .reportResultsGrid {
-    display: flex !important;
-    flex-wrap: nowrap !important;
-    gap: 10px !important;
-    align-items: start !important;
+    display: block !important;
     width: 100% !important;
     margin-top: 3px !important;
     box-sizing: border-box !important;
   }
   .reportResultsGrid > * {
-    flex: 1 !important;
+    width: 100% !important;
     min-width: 0 !important;
   }
   .compactReportTable {
@@ -1436,7 +1460,7 @@ tr.dragging {
   }
   .compactReportTable th {
     font-size: 7.2px !important;
-    padding: 2px 3px !important;
+    padding: 2px 4px !important;
     white-space: normal !important;
     text-align: left !important;
     font-weight: 700 !important;
@@ -1450,7 +1474,7 @@ tr.dragging {
   }
   .compactReportTable td {
     font-size: 7.2px !important;
-    padding: 2px 3px !important;
+    padding: 2px 4px !important;
     border: none !important;
     border-bottom: 0.5px solid #e2e8f0 !important;
     vertical-align: middle !important;
@@ -1465,25 +1489,26 @@ tr.dragging {
   }
   .compactReportTable th:nth-child(1),
   .compactReportTable td:nth-child(1) {
-    width: 20% !important;
+    width: 18% !important;
   }
   .compactReportTable th:nth-child(2),
   .compactReportTable td:nth-child(2) {
-    width: 32% !important;
+    width: 22% !important;
   }
   .compactReportTable th:nth-child(3),
   .compactReportTable td:nth-child(3) {
-    width: 15% !important;
+    width: 14% !important;
     font-weight: 700 !important;
   }
   .compactReportTable th:nth-child(4),
   .compactReportTable td:nth-child(4) {
-    width: 13% !important;
+    width: 10% !important;
   }
   .compactReportTable th:nth-child(5),
   .compactReportTable td:nth-child(5) {
-    width: 20% !important;
+    width: 36% !important;
     font-size: 6.8px !important;
+    line-height: 1.2 !important;
   }
 
   .reportObservations {

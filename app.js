@@ -3074,13 +3074,13 @@ function hydrateForms() {
   });
   if (typeof updateCollabRoleView === "function") updateCollabRoleView();
   if (typeof toggleCollabSettings === "function") toggleCollabSettings();
-  $("#workDateFrom").value = today();
-  $("#workDateTo").value = today();
+  $("#workDateFrom").value = "";
+  $("#workDateTo").value = "";
   if ($("#outsourceDateFrom")) $("#outsourceDateFrom").value = today();
   if ($("#outsourceDateTo")) $("#outsourceDateTo").value = today();
   if ($("#epidemiologyDateFrom")) $("#epidemiologyDateFrom").value = today();
   if ($("#epidemiologyDateTo")) $("#epidemiologyDateTo").value = today();
-  $("#reportDate").value = today();
+  $("#reportDate").value = "";
   if ($("#exportDateFrom")) $("#exportDateFrom").value = today();
   if ($("#exportDateTo")) $("#exportDateTo").value = today();
   if (STATISTICS_ENABLED) {
@@ -4600,8 +4600,10 @@ function workRows() {
 function renderWorklist() {
   const rows = workRows();
   const dateGroups = groupBy(rows, (item) => item.req.date);
+  const sortedDates = Array.from(dateGroups.keys()).sort().reverse();
 
-  $("#workRows").innerHTML = (dateGroups.size ? renderLabHeader("Lista de Trabajo", true) : "") + Array.from(dateGroups.entries()).map(([date, items]) => {
+  $("#workRows").innerHTML = (dateGroups.size ? renderLabHeader("Lista de Trabajo", true) : "") + sortedDates.map((date) => {
+    const items = dateGroups.get(date);
     const patientGroups = groupBy(items, (item) => `${item.req.name}|${item.req.code}|${item.req.auxCode || ""}`);
     return `
       <div class="workDateGroup">
@@ -4686,7 +4688,7 @@ function renderWorklist() {
         }).join("")}
       </div>
     `;
-  }).sort().reverse().join("") || `<p class="note">No hay datos para la lista seleccionada.</p>`;
+  }).join("") || `<p class="note">No hay datos para la lista seleccionada.</p>`;
 
   $("#workRows").onclick = (event) => {
     const editBtn = event.target.closest("button[data-action='edit-patient']");
@@ -4730,7 +4732,7 @@ function renderWorklist() {
 function reportItems() {
   const query = $("#reportSearch").value.trim().toLowerCase();
   const date = $("#reportDate").value;
-  return state.requests.filter((req) => {
+  const filtered = state.requests.filter((req) => {
     const hasVisibleNormalTests = (req.tests || []).some(t => {
       if (t.depurado) return false;
       const catalogItem = catalog.find(c => c.id === t.id) || {};
@@ -4771,6 +4773,14 @@ function reportItems() {
     ].join(" ").toLowerCase().includes(query);
     const matchDate = query ? true : (!date || req.date === date);
     return matchQuery && matchDate;
+  });
+
+  return filtered.sort((a, b) => {
+    const dateComp = String(b.date || "").localeCompare(String(a.date || ""));
+    if (dateComp !== 0) return dateComp;
+    const timeA = new Date(a.reportUpdatedAt || 0).getTime();
+    const timeB = new Date(b.reportUpdatedAt || 0).getTime();
+    return timeB - timeA;
   });
 }
 
@@ -4940,6 +4950,55 @@ function renderSingleReportHtml(req) {
     return true;
   });
 
+  const sortedTests = visibleTests.sort(sortTestsForReport);
+  let prevArea = null;
+  let prevDet = null;
+
+  const tableRows = sortedTests.map((test, index) => {
+    const catalogItem = catalog.find(c => c.id === test.id) || {};
+    const area = catalogItem.area || test.area || "GENERAL";
+    const areaNorm = area.trim().toUpperCase();
+    
+    const showAreaHeader = (index === 0 || areaNorm !== prevArea);
+    if (showAreaHeader) {
+      prevDet = null;
+    }
+    
+    const showDet = (index === 0 || showAreaHeader || requestDetermination(test) !== prevDet);
+    
+    prevArea = areaNorm;
+    prevDet = requestDetermination(test);
+    
+    const testsInArea = sortedTests.filter(t => {
+      const cItem = catalog.find(c => c.id === t.id) || {};
+      const tArea = cItem.area || t.area || "GENERAL";
+      return tArea.trim().toUpperCase() === areaNorm;
+    });
+    const allEmpty = testsInArea.every(t => !t.result && !t.notes);
+    
+    let html = "";
+    if (showAreaHeader) {
+      html += `
+        <tr class="area-header-row ${allEmpty ? 'empty-test' : ''}">
+          <td colspan="5" class="report-area-title" style="font-weight: 700; color: var(--teal); background-color: var(--teal-2); padding: 4px 6px !important; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; border-bottom: 1.5px solid var(--teal) !important;">
+            ${escapeHtml(areaNorm)}
+          </td>
+        </tr>
+      `;
+    }
+    
+    html += `
+      <tr class="${!test.result && !test.notes ? 'empty-test' : ''}">
+        <td style="font-weight: 600; color: var(--teal);">${showDet ? escapeHtml(requestDetermination(test)) : ""}</td>
+        <td>${escapeHtml(requestParameter(test))}</td>
+        <td style="font-weight: 700;">${escapeHtml(test.result || "---")}</td>
+        <td>${escapeHtml(requestUnit(test) || "---")}</td>
+        <td>${escapeHtml(requestReference(test) || "---")}</td>
+      </tr>
+    `;
+    return html;
+  }).join("");
+
   return `
     <article class="report" style="border:none; box-shadow:none; padding:0; margin:0;">
       ${renderLabHeader("", false, req)}
@@ -4961,67 +5020,16 @@ function renderSingleReportHtml(req) {
         <span><strong>Código Registro:</strong> ${escapeHtml(req.code)}</span>
         <span><strong>Reportado:</strong> ${escapeHtml(reportDateTime(req))}</span>
       </div>
-      <div class="reportResultsGrid">${splitTests(visibleTests.sort(sortTestsForReport)).map((tests) => {
-        let prevArea = null;
-        let prevDet = null;
-        return `
+      <div class="reportResultsGrid">
         <table class="compactReportTable">
-          <thead><tr><th>Determinacion</th><th>Parametro</th><th>Resultado</th><th>Unidad</th><th>Referencia</th></tr></thead>
-          <tbody>${tests.map((test, index) => {
-            const catalogItem = catalog.find(c => c.id === test.id) || {};
-            const area = catalogItem.area || test.area || "GENERAL";
-            const areaNorm = area.trim().toUpperCase();
-            
-            const showAreaHeader = (index === 0 || areaNorm !== prevArea);
-            if (showAreaHeader) {
-              prevDet = null;
-            }
-            
-            const showDet = (index === 0 || showAreaHeader || requestDetermination(test) !== prevDet);
-            
-            prevArea = areaNorm;
-            prevDet = requestDetermination(test);
-            
-            const testsInArea = tests.filter(t => {
-              const cItem = catalog.find(c => c.id === t.id) || {};
-              const tArea = cItem.area || t.area || "GENERAL";
-              return tArea.trim().toUpperCase() === areaNorm;
-            });
-            const allEmpty = testsInArea.every(t => !t.result && !t.notes);
-            
-            let html = "";
-            if (showAreaHeader) {
-              html += `
-                <tr class="area-header-row ${allEmpty ? 'empty-test' : ''}">
-                  <td colspan="5" class="report-area-title" style="font-weight: 700; color: var(--teal); background-color: var(--teal-2); padding: 4px 6px !important; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; border-bottom: 1.5px solid var(--teal) !important;">
-                    ${escapeHtml(areaNorm)}
-                  </td>
-                </tr>
-              `;
-            }
-            
-            html += `
-              <tr class="${!test.result && !test.notes ? 'empty-test' : ''}">
-                <td style="font-weight: 600; color: var(--teal);">${showDet ? escapeHtml(requestDetermination(test)) : ""}</td>
-                <td>${escapeHtml(requestParameter(test))}</td>
-                <td>${escapeHtml(test.result || "---")}</td>
-                <td>${escapeHtml(requestUnit(test) || "---")}</td>
-                <td>${escapeHtml(requestReference(test) || "---")}</td>
-              </tr>
-            `;
-            return html;
-          }).join("")}</tbody>
+          <thead><tr><th>Determinación</th><th>Parámetro</th><th>Resultado</th><th>Unidad</th><th>Referencia</th></tr></thead>
+          <tbody>${tableRows}</tbody>
         </table>
-        `;
-      }).join("")}</div>
+      </div>
       ${(() => {
         const notesHtml = groupedNotes(visibleTests);
         return notesHtml !== "Sin observaciones." ? `<div class="reportObservations" style="margin-top: 6px;"><strong>Observaciones Clínicas:</strong> ${escapeHtml(notesHtml)}</div>` : "";
       })()}
-      <div class="reportSignatures">
-        <div>Firma y Sello del Bioquímico</div>
-        <div>Firma y Sello del Responsable de Área</div>
-      </div>
       <div class="reportPrintFooter">
         <span>Emitido: ${escapeHtml(reportDateTime(req))}</span>
         <span style="font-weight: 700;">Página 1 de 1</span>
@@ -5080,6 +5088,56 @@ function renderReports() {
       
       return true;
     });
+
+    const sortedTests = visibleTests.sort(sortTestsForReport);
+    let prevArea = null;
+    let prevDet = null;
+
+    const tableRows = sortedTests.map((test, index) => {
+      const catalogItem = catalog.find(c => c.id === test.id) || {};
+      const area = catalogItem.area || test.area || "GENERAL";
+      const areaNorm = area.trim().toUpperCase();
+      
+      const showAreaHeader = (index === 0 || areaNorm !== prevArea);
+      if (showAreaHeader) {
+        prevDet = null;
+      }
+      
+      const showDet = (index === 0 || showAreaHeader || requestDetermination(test) !== prevDet);
+      
+      prevArea = areaNorm;
+      prevDet = requestDetermination(test);
+      
+      const testsInArea = sortedTests.filter(t => {
+        const cItem = catalog.find(c => c.id === t.id) || {};
+        const tArea = cItem.area || t.area || "GENERAL";
+        return tArea.trim().toUpperCase() === areaNorm;
+      });
+      const allEmpty = testsInArea.every(t => !t.result && !t.notes);
+      
+      let html = "";
+      if (showAreaHeader) {
+        html += `
+          <tr class="area-header-row ${allEmpty ? 'empty-test' : ''}">
+            <td colspan="5" class="report-area-title" style="font-weight: 700; color: var(--teal); background-color: var(--teal-2); padding: 4px 6px !important; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; border-bottom: 1.5px solid var(--teal) !important;">
+              ${escapeHtml(areaNorm)}
+            </td>
+          </tr>
+        `;
+      }
+      
+      html += `
+        <tr class="${!test.result && !test.notes ? 'empty-test' : ''}">
+          <td style="font-weight: 600; color: var(--teal);">${showDet ? escapeHtml(requestDetermination(test)) : ""}</td>
+          <td>${escapeHtml(requestParameter(test))}</td>
+          <td style="font-weight: 700;">${escapeHtml(test.result || "---")}</td>
+          <td>${escapeHtml(requestUnit(test) || "---")}</td>
+          <td>${escapeHtml(requestReference(test) || "---")}</td>
+        </tr>
+      `;
+      return html;
+    }).join("");
+
     return `
     <article class="report">
       <div class="report-card-actions noPrint">
@@ -5109,67 +5167,16 @@ function renderReports() {
         <span><strong>Código Registro:</strong> ${escapeHtml(req.code)}</span>
         <span><strong>Reportado:</strong> ${escapeHtml(reportDateTime(req))}</span>
       </div>
-      <div class="reportResultsGrid">${splitTests(visibleTests.sort(sortTestsForReport)).map((tests) => {
-        let prevArea = null;
-        let prevDet = null;
-        return `
+      <div class="reportResultsGrid">
         <table class="compactReportTable">
-          <thead><tr><th>Determinacion</th><th>Parametro</th><th>Resultado</th><th>Unidad</th><th>Referencia</th></tr></thead>
-          <tbody>${tests.map((test, index) => {
-            const catalogItem = catalog.find(c => c.id === test.id) || {};
-            const area = catalogItem.area || test.area || "GENERAL";
-            const areaNorm = area.trim().toUpperCase();
-            
-            const showAreaHeader = (index === 0 || areaNorm !== prevArea);
-            if (showAreaHeader) {
-              prevDet = null;
-            }
-            
-            const showDet = (index === 0 || showAreaHeader || requestDetermination(test) !== prevDet);
-            
-            prevArea = areaNorm;
-            prevDet = requestDetermination(test);
-            
-            const testsInArea = tests.filter(t => {
-              const cItem = catalog.find(c => c.id === t.id) || {};
-              const tArea = cItem.area || t.area || "GENERAL";
-              return tArea.trim().toUpperCase() === areaNorm;
-            });
-            const allEmpty = testsInArea.every(t => !t.result && !t.notes);
-            
-            let html = "";
-            if (showAreaHeader) {
-              html += `
-                <tr class="area-header-row ${allEmpty ? 'empty-test' : ''}">
-                  <td colspan="5" class="report-area-title" style="font-weight: 700; color: var(--teal); background-color: var(--teal-2); padding: 4px 6px !important; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; border-bottom: 1.5px solid var(--teal) !important;">
-                    ${escapeHtml(areaNorm)}
-                  </td>
-                </tr>
-              `;
-            }
-            
-            html += `
-              <tr class="${!test.result && !test.notes ? 'empty-test' : ''}">
-                <td style="font-weight: 600; color: var(--teal);">${showDet ? escapeHtml(requestDetermination(test)) : ""}</td>
-                <td>${escapeHtml(requestParameter(test))}</td>
-                <td>${escapeHtml(test.result || "---")}</td>
-                <td>${escapeHtml(requestUnit(test) || "---")}</td>
-                <td>${escapeHtml(requestReference(test) || "---")}</td>
-              </tr>
-            `;
-            return html;
-          }).join("")}</tbody>
+          <thead><tr><th>Determinación</th><th>Parámetro</th><th>Resultado</th><th>Unidad</th><th>Referencia</th></tr></thead>
+          <tbody>${tableRows}</tbody>
         </table>
-        `;
-      }).join("")}</div>
+      </div>
       ${(() => {
         const notesHtml = groupedNotes(visibleTests);
         return notesHtml !== "Sin observaciones." ? `<div class="reportObservations" style="margin-top: 6px;"><strong>Observaciones Clínicas:</strong> ${escapeHtml(notesHtml)}</div>` : "";
       })()}
-      <div class="reportSignatures">
-        <div>Firma y Sello del Bioquímico</div>
-        <div>Firma y Sello del Responsable de Área</div>
-      </div>
       <div class="reportPrintFooter">
         <span>Emitido: ${escapeHtml(reportDateTime(req))}</span>
         <span style="font-weight: 700;">Página 1 de 1</span>
