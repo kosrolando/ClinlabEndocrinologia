@@ -1094,11 +1094,11 @@ tr.dragging {
 
 @media print {
   @page {
-    size: 8.5in 5.5in; /* Media Carta / Half Letter landscape default */
-    margin: 4mm 6mm;
+    size: 8.5in 5.5in; /* Media Carta / Half Letter apaisado predeterminado (Ancho: 8.5in/216mm, Alto: 5.5in/140mm) */
+    margin: 5mm 7mm;
     @bottom-right {
       content: "Página " counter(page) " de " counter(pages);
-      font-family: sans-serif;
+      font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       font-size: 7.5px;
       color: #667780;
     }
@@ -1106,22 +1106,22 @@ tr.dragging {
 
   @page media_carta_page {
     size: 8.5in 5.5in;
-    margin: 4mm 6mm;
+    margin: 5mm 7mm;
   }
 
   @page a5_horizontal_page {
     size: 210mm 148mm;
-    margin: 4mm 6mm;
+    margin: 5mm 7mm;
   }
 
   @page medio_oficio_page {
     size: 8.5in 6.5in;
-    margin: 4mm 6mm;
+    margin: 5mm 7mm;
   }
 
   @page carta_page {
     size: letter portrait;
-    margin: 8mm 10mm;
+    margin: 6mm 8mm;
   }
 
   body[data-paper-size="media_carta"] { page: media_carta_page; }
@@ -1289,10 +1289,15 @@ tr.dragging {
     box-shadow: none !important;
     padding: 0 !important;
     font-size: 8px;
-    line-height: 1;
+    line-height: 1.15;
     box-sizing: border-box;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
   }
   .report:not(:last-child) {
     page-break-after: always !important;
@@ -1305,34 +1310,36 @@ tr.dragging {
   
   .reportHeader {
     display: flex !important;
-    gap: 6px !important;
-    padding-bottom: 2px !important;
-    margin-bottom: 3px !important;
-    border-bottom: 1.5px solid var(--teal) !important;
+    gap: 8px !important;
+    align-items: center !important;
+    padding-bottom: 3px !important;
+    margin-bottom: 4px !important;
+    border-bottom: 2px solid var(--teal) !important;
   }
   .reportHeader img {
-    width: 32px !important;
-    height: 32px !important;
+    width: 36px !important;
+    height: 36px !important;
     object-fit: contain !important;
   }
   .reportHeader h3 {
-    font-size: 9.5px !important;
+    font-size: 10px !important;
     margin: 0 !important;
     font-weight: 800 !important;
     color: var(--ink) !important;
+    letter-spacing: 0.2px;
   }
   .reportHeader p {
     margin: 0 !important;
     font-size: 7.5px !important;
-    color: var(--muted) !important;
-    line-height: 1.1 !important;
+    color: #475569 !important;
+    line-height: 1.15 !important;
   }
   .reportTitle {
-    font-size: 9.5px !important;
+    font-size: 10px !important;
     font-weight: 700 !important;
-    max-width: 50% !important;
+    max-width: 45% !important;
     text-align: right !important;
-    line-height: 1.1 !important;
+    line-height: 1.15 !important;
     align-self: center !important;
     color: var(--teal) !important;
   }
@@ -1347,7 +1354,7 @@ tr.dragging {
     gap: 0 !important;
   }
   .reportBarcodeBox .barcodeAuxLabel {
-    font-size: 7px !important;
+    font-size: 7.2px !important;
     font-weight: 700 !important;
     color: var(--teal) !important;
     line-height: 1 !important;
@@ -1357,12 +1364,12 @@ tr.dragging {
     color: var(--ink) !important;
   }
   .reportBarcodeBox .barcodeSvg {
-    max-width: 120px !important;
+    max-width: 125px !important;
     height: 18px !important;
     display: block !important;
   }
   .reportBarcodeBox .barcodeCodeLabel {
-    font-size: 6.8px !important;
+    font-size: 7px !important;
     font-family: monospace, ui-monospace, sans-serif !important;
     color: var(--ink) !important;
     font-weight: 700 !important;
@@ -1374,38 +1381,46 @@ tr.dragging {
   .patientHeader {
     display: grid !important;
     grid-template-columns: repeat(4, 1fr) !important;
-    gap: 1px 6px !important;
-    font-size: 7.2px !important;
-    margin-bottom: 3px !important;
+    gap: 1.5px 8px !important;
+    font-size: 7.5px !important;
+    margin-bottom: 4px !important;
     width: 100% !important;
-    padding: 2px 4px !important;
+    padding: 3px 6px !important;
     background: #f8fafc !important;
-    border: 0.5px solid #e2e8f0 !important;
+    border: 0.75px solid #cbd5e1 !important;
     border-radius: 4px !important;
+    box-sizing: border-box !important;
   }
   .patientHeader .formSubtitle {
     grid-column: 1 / -1 !important;
-    font-size: 6.8px !important;
+    font-size: 7px !important;
     margin: 1px 0 !important;
     padding-bottom: 1px !important;
     font-weight: 700 !important;
     color: var(--teal) !important;
     border-bottom: 0.5px solid var(--teal-2) !important;
     text-transform: uppercase !important;
+    letter-spacing: 0.4px !important;
   }
   .patientHeader > span {
     white-space: normal !important;
     overflow: visible !important;
     text-overflow: clip !important;
-    line-height: 1.15 !important;
+    line-height: 1.2 !important;
+    color: #1e293b !important;
   }
+  .patientHeader > span strong {
+    color: #0f172a !important;
+  }
+
   .reportResultsGrid {
     display: flex !important;
     flex-wrap: nowrap !important;
-    gap: 8px !important;
+    gap: 10px !important;
     align-items: start !important;
     width: 100% !important;
     margin-top: 3px !important;
+    box-sizing: border-box !important;
   }
   .reportResultsGrid > * {
     flex: 1 !important;
@@ -1414,31 +1429,39 @@ tr.dragging {
   .compactReportTable {
     width: 100% !important;
     border-collapse: collapse !important;
-    font-size: 7px !important;
+    font-size: 7.2px !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
     table-layout: fixed !important;
   }
   .compactReportTable th {
-    font-size: 7px !important;
-    padding: 1px 2px !important;
+    font-size: 7.2px !important;
+    padding: 2px 3px !important;
     white-space: normal !important;
     text-align: left !important;
     font-weight: 700 !important;
     vertical-align: middle !important;
     background: #f1f5f9 !important;
-    border-bottom: 1px solid #cbd5e1 !important;
+    border-top: 0.75px solid #cbd5e1 !important;
+    border-bottom: 1px solid #94a3b8 !important;
+    color: #1e293b !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.2px !important;
   }
   .compactReportTable td {
-    font-size: 6.8px !important;
-    padding: 1px 2px !important;
+    font-size: 7.2px !important;
+    padding: 2px 3px !important;
     border: none !important;
     border-bottom: 0.5px solid #e2e8f0 !important;
     vertical-align: middle !important;
-    line-height: 1.1 !important;
+    line-height: 1.15 !important;
     overflow-wrap: break-word !important;
     word-wrap: break-word !important;
     white-space: normal !important;
+    color: #1e293b !important;
+  }
+  .compactReportTable tr:nth-child(even) td {
+    background-color: #fcfcfd !important;
   }
   .compactReportTable th:nth-child(1),
   .compactReportTable td:nth-child(1) {
@@ -1450,46 +1473,63 @@ tr.dragging {
   }
   .compactReportTable th:nth-child(3),
   .compactReportTable td:nth-child(3) {
-    width: 14% !important;
+    width: 15% !important;
     font-weight: 700 !important;
   }
   .compactReportTable th:nth-child(4),
   .compactReportTable td:nth-child(4) {
-    width: 12% !important;
+    width: 13% !important;
   }
   .compactReportTable th:nth-child(5),
   .compactReportTable td:nth-child(5) {
-    width: 22% !important;
-    font-size: 6.2px !important;
+    width: 20% !important;
+    font-size: 6.8px !important;
+  }
+
+  .reportObservations {
+    display: block !important;
+    margin-top: 4px !important;
+    padding: 3px 6px !important;
+    background: #f8fafc !important;
+    border: 0.5px solid #cbd5e1 !important;
+    border-left: 3px solid var(--teal) !important;
+    border-radius: 3px !important;
+    font-size: 7.2px !important;
+    line-height: 1.2 !important;
+    color: #1e293b !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
   .reportSignatures {
     display: flex !important;
     justify-content: space-around !important;
-    margin-top: 5px !important;
-    padding-top: 12px !important;
+    margin-top: 6px !important;
+    padding-top: 16px !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
   .reportSignatures > div {
-    border-top: 0.75px dashed #475569 !important;
-    font-size: 7px !important;
+    border-top: 1px dashed #475569 !important;
+    font-size: 7.2px !important;
     text-align: center !important;
     width: 40% !important;
-    color: #1e293b !important;
-    font-weight: 600 !important;
-    line-height: 1.1 !important;
-    padding-top: 2px !important;
+    color: #0f172a !important;
+    font-weight: 700 !important;
+    line-height: 1.15 !important;
+    padding-top: 3px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.2px !important;
   }
 
   .reportPrintFooter {
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
-    margin-top: 3px !important;
+    margin-top: 4px !important;
     padding-top: 2px !important;
-    border-top: 0.5px solid #e2e8f0 !important;
-    font-size: 6.5px !important;
+    border-top: 0.5px solid #cbd5e1 !important;
+    font-size: 6.8px !important;
     color: #64748b !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
@@ -2079,7 +2119,8 @@ tr.dragging {
 @media print {
   .compactReportTable tr.area-header-row td.report-area-title {
     font-size: 7.5px !important;
-    padding: 3px 6px !important;
+    padding: 2px 4px !important;
+    border-top: 1px solid var(--teal) !important;
     border-bottom: 1px solid var(--teal) !important;
     width: 100% !important;
   }
