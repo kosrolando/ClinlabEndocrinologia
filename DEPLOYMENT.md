@@ -55,4 +55,4 @@ Para ejecución local en red o escritorio:
 npm start
 # O ejecutar INICIAR_CLINLAB.bat
 ```
-La aplicación abrirá en: `http://localhost:4244`
+La aplicación abrirá en: `http://localhost:4245`

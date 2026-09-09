@@ -19,8 +19,8 @@ import { tursoBootstrap, tursoSavePayload, tursoDelete, tursoSearch, isTursoConf
 
 
 const root = fileURLToPath(new URL(".", import.meta.url));
-const port = Number(process.env.PORT || 4244);
-const appDataRoot = join(process.env.APPDATA || process.cwd(), "LaboratorioSistema");
+const port = Number(process.env.PORT || 4245);
+const appDataRoot = join(process.env.APPDATA || process.cwd(), process.env.CLINLAB_DATA_DIR_NAME || "LaboratorioSistema_Endocrinologia");
 const dirs = {
   root: appDataRoot,
   db: join(appDataRoot, "db"),
@@ -44,8 +44,36 @@ const types = {
 
 const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
+async function migrateLegacyDataIfPresent() {
+  const legacyRoot = join(process.env.APPDATA || process.cwd(), "LaboratorioSistema");
+  if (appDataRoot !== legacyRoot && existsSync(legacyRoot)) {
+    const year = new Date().getFullYear();
+    const legacyDb = join(legacyRoot, "db", `registros_${year}.db`);
+    const targetDb = join(dirs.db, `registros_${year}.db`);
+    if (existsSync(legacyDb) && !existsSync(targetDb)) {
+      try {
+        await copyFile(legacyDb, targetDb);
+        console.log(`[Aislamiento] Base de datos ${year} migrada de forma segura a ${targetDb}`);
+      } catch (e) {
+        console.warn("[Aislamiento] Aviso al copiar base de datos:", e.message);
+      }
+    }
+    const configsToCopy = ["licencia.json", "sistema.json", "sync_config.json"];
+    for (const cfg of configsToCopy) {
+      const src = join(legacyRoot, "config", cfg);
+      const dest = configPath(cfg);
+      if (existsSync(src) && !existsSync(dest)) {
+        try {
+          await copyFile(src, dest);
+        } catch (e) {}
+      }
+    }
+  }
+}
+
 async function ensureStructure() {
   await Promise.all(Object.values(dirs).map((dir) => mkdir(dir, { recursive: true })));
+  await migrateLegacyDataIfPresent();
   await ensureJson(configPath("sistema.json"), {
     version_sistema: SYSTEM_VERSION,
     contacto_tecnico: { nombre: "Administrador", telefono: "+591XXXXXXXX", correo: "administrador@ejemplo.com" },
@@ -493,6 +521,21 @@ async function ensureCloudStructure() {
   });
 }
 
+function normalizeSettingsIdentity(s) {
+  const norm = { ...(s || {}) };
+  if (!norm.institution || norm.institution === "Institucion") norm.institution = "CAJA NACIONAL DE SALUD";
+  if (!norm.healthFacility || norm.healthFacility === "Establecimiento de Salud" || norm.healthFacility === "CIMFA MIRAFLORES") {
+    norm.healthFacility = "HOSPITAL DE ESPECIALIDADES MATERNO INFANTIL";
+  }
+  if (!norm.service || norm.service === "Servicio") {
+    norm.service = "SERVICIO DE LABORATORIO CLINICO";
+  }
+  if (!norm.lab || norm.lab === "Laboratorio clinico" || norm.lab === "Laboratorio Clínico") {
+    norm.lab = "AREA DE ENDOCRINOLOGIA Y MARCADORES TUMORALES";
+  }
+  return norm;
+}
+
 async function bootstrap() {
   await ensureStructure();
   if (isTursoConfigured()) {
@@ -501,6 +544,7 @@ async function bootstrap() {
       if (cloudData && cloudData.ok) {
         return {
           ...cloudData,
+          settings: normalizeSettingsIdentity(cloudData.settings),
           appDataRoot,
           syncStatus: {
             estado: "sincronizado",
@@ -518,7 +562,8 @@ async function bootstrap() {
   const license = await verifyLicense();
   const year = new Date().getFullYear();
   const db = openYearDb(year);
-  const settings = JSON.parse(db.prepare("SELECT valor FROM ajustes WHERE clave = 'settings'").get()?.valor || "null");
+  const rawSettings = JSON.parse(db.prepare("SELECT valor FROM ajustes WHERE clave = 'settings'").get()?.valor || "null");
+  const settings = normalizeSettingsIdentity(rawSettings);
   const externalList = JSON.parse(db.prepare("SELECT valor FROM ajustes WHERE clave = 'externalList'").get()?.valor || "[]");
   const requests = db.prepare("SELECT payload FROM reportes ORDER BY fecha, codigo").all().map((row) => JSON.parse(row.payload));
   const catalog = db.prepare("SELECT payload FROM catalogo").all().map((row) => JSON.parse(row.payload));
@@ -1399,7 +1444,7 @@ async function handleApi(req, res, url) {
   }
 }
 
-createServer(async (req, res) => {
+const server = createServer(async (req, res) => {
   const url = new URL(req.url || "/", `http://localhost:${port}`);
   if (url.pathname.startsWith("/api/")) return handleApi(req, res, url);
   try {
@@ -1415,6 +1460,18 @@ createServer(async (req, res) => {
     res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
     res.end("No encontrado");
   }
-}).listen(port, () => {
+});
+
+server.on("error", (err) => {
+  if (err.code === "EADDRINUSE") {
+    console.error(`\n[ERROR CRITICO] El puerto ${port} ya esta en uso por otro proceso.`);
+    console.error(`Asegurese de cerrar cualquier instancia previa o utilice otro puerto.\n`);
+  } else {
+    console.error(`\n[ERROR EN SERVIDOR]:`, err.message);
+  }
+  process.exit(1);
+});
+
+server.listen(port, () => {
   console.log(`ClinLab Suite listo en http://localhost:${port}`);
 });

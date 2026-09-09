@@ -14,19 +14,29 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo 1. Verificando estado de Git...
+echo 1. Comprobando sintaxis de archivos...
+call npm run check
+if errorlevel 1 (
+    echo.
+    echo [ERROR] La comprobacion de sintaxis fallo. Corrija los errores antes de continuar.
+    pause
+    exit /b 1
+)
+
+echo.
+echo 2. Verificando estado de Git...
 git status --short
 
 echo.
-echo 2. Agregando archivos al staging...
+echo 3. Agregando archivos al staging...
 git add .
 
 echo.
-echo 3. Realizando commit de actualizacion...
-git commit -m "v1.2.0 - Preparacion y actualizacion de archivos para GitHub y Vercel"
+echo 4. Realizando commit de actualizacion...
+git commit -m "v1.2.2 - Actualizacion a puerto 4245, aislamiento local e identidad institucional CNS Materno Infantil"
 
 echo.
-echo 4. Enviando cambios a GitHub (main)...
+echo 5. Enviando cambios a GitHub (main)...
 git push origin main
 
 echo.

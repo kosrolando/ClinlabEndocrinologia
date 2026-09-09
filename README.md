@@ -17,7 +17,7 @@ npm start
 Abrir:
 
 ```text
-http://localhost:4244
+http://localhost:4245
 ```
 
 En Windows tambien puede ejecutar `INICIAR_CLINLAB.bat`.
@@ -27,7 +27,7 @@ En Windows tambien puede ejecutar `INICIAR_CLINLAB.bat`.
 La aplicacion crea automaticamente esta estructura fuera del repositorio:
 
 ```text
-%APPDATA%/LaboratorioSistema/
+%APPDATA%/LaboratorioSistema_Endocrinologia/
 ├── db/
 │   ├── registros_YYYY.db
 │   └── registros_activos.db

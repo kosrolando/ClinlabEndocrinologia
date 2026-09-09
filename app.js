@@ -1153,6 +1153,7 @@ const state = {
   settings: store.get("clinlab.settings", {
     institution: "CAJA NACIONAL DE SALUD",
     healthFacility: "HOSPITAL DE ESPECIALIDADES MATERNO INFANTIL",
+    service: "SERVICIO DE LABORATORIO CLINICO",
     lab: "AREA DE ENDOCRINOLOGIA Y MARCADORES TUMORALES",
     labAreas: "",
     address: "",
@@ -1176,10 +1177,13 @@ const state = {
 if (!state.settings.institution || state.settings.institution === "Institucion") {
   state.settings.institution = "CAJA NACIONAL DE SALUD";
 }
-if (!state.settings.healthFacility || state.settings.healthFacility === "Establecimiento de Salud") {
+if (!state.settings.healthFacility || state.settings.healthFacility === "Establecimiento de Salud" || state.settings.healthFacility === "CIMFA MIRAFLORES") {
   state.settings.healthFacility = "HOSPITAL DE ESPECIALIDADES MATERNO INFANTIL";
 }
-if (!state.settings.lab || state.settings.lab === "Laboratorio clinico") {
+if (!state.settings.service || state.settings.service === "Servicio") {
+  state.settings.service = "SERVICIO DE LABORATORIO CLINICO";
+}
+if (!state.settings.lab || state.settings.lab === "Laboratorio clinico" || state.settings.lab === "Laboratorio Clínico") {
   state.settings.lab = "AREA DE ENDOCRINOLOGIA Y MARCADORES TUMORALES";
 }
 if (!state.settings.logo) {
@@ -2261,10 +2265,13 @@ async function init() {
   if (!state.settings.institution || state.settings.institution === "Institucion") {
     state.settings.institution = "CAJA NACIONAL DE SALUD";
   }
-  if (!state.settings.healthFacility || state.settings.healthFacility === "Establecimiento de Salud") {
+  if (!state.settings.healthFacility || state.settings.healthFacility === "Establecimiento de Salud" || state.settings.healthFacility === "CIMFA MIRAFLORES") {
     state.settings.healthFacility = "HOSPITAL DE ESPECIALIDADES MATERNO INFANTIL";
   }
-  if (!state.settings.lab || state.settings.lab === "Laboratorio clinico") {
+  if (!state.settings.service || state.settings.service === "Servicio") {
+    state.settings.service = "SERVICIO DE LABORATORIO CLINICO";
+  }
+  if (!state.settings.lab || state.settings.lab === "Laboratorio clinico" || state.settings.lab === "Laboratorio Clínico") {
     state.settings.lab = "AREA DE ENDOCRINOLOGIA Y MARCADORES TUMORALES";
   }
   if (!state.settings.logo || state.settings.logo === "") {
@@ -3057,6 +3064,7 @@ function hydrateForms() {
   const instDefaults = {
     institution: "CAJA NACIONAL DE SALUD",
     healthFacility: "HOSPITAL DE ESPECIALIDADES MATERNO INFANTIL",
+    service: "SERVICIO DE LABORATORIO CLINICO",
     lab: "AREA DE ENDOCRINOLOGIA Y MARCADORES TUMORALES"
   };
   Object.entries(state.settings).forEach(([key, value]) => {
@@ -4872,8 +4880,9 @@ function generateBarcode128Svg(text, height = 22) {
 function renderLabHeader(title = "", printOnly = false, req = null) {
   const logoSrc = state.settings.logo || "assets/icon.svg";
   const inst = (state.settings.institution && state.settings.institution !== "Institucion") ? state.settings.institution : "CAJA NACIONAL DE SALUD";
-  const fac = (state.settings.healthFacility && state.settings.healthFacility !== "Establecimiento de Salud") ? state.settings.healthFacility : "HOSPITAL DE ESPECIALIDADES MATERNO INFANTIL";
-  const lab = (state.settings.lab && state.settings.lab !== "Laboratorio clinico") ? state.settings.lab : "AREA DE ENDOCRINOLOGIA Y MARCADORES TUMORALES";
+  const fac = (state.settings.healthFacility && state.settings.healthFacility !== "Establecimiento de Salud" && state.settings.healthFacility !== "CIMFA MIRAFLORES") ? state.settings.healthFacility : "HOSPITAL DE ESPECIALIDADES MATERNO INFANTIL";
+  const srv = (state.settings.service && state.settings.service !== "Servicio") ? state.settings.service : "SERVICIO DE LABORATORIO CLINICO";
+  const lab = (state.settings.lab && state.settings.lab !== "Laboratorio clinico" && state.settings.lab !== "Laboratorio Clínico") ? state.settings.lab : "AREA DE ENDOCRINOLOGIA Y MARCADORES TUMORALES";
   const sub = [state.settings.labAreas, state.settings.address, state.settings.phone].filter(Boolean).join(" - ");
   
   let barcodeHtml = "";
@@ -4893,9 +4902,10 @@ function renderLabHeader(title = "", printOnly = false, req = null) {
       <img src="${logoSrc}" alt="Logo Institucional" />
       <div style="flex: 1;">
         <h3>${escapeHtml(inst)}</h3>
-        <p>${escapeHtml(fac)}</p>
-        <p>${escapeHtml(lab)}</p>
-        ${sub ? `<p>${escapeHtml(sub)}</p>` : ""}
+        <p class="headerHospital">${escapeHtml(fac)}</p>
+        <p class="headerService">${escapeHtml(srv)}</p>
+        <p class="headerArea">${escapeHtml(lab)}</p>
+        ${sub ? `<p class="headerSub">${escapeHtml(sub)}</p>` : ""}
       </div>
       ${barcodeHtml}
       ${title ? `<div class="reportTitle">${escapeHtml(title)}</div>` : ""}

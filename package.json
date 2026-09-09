@@ -1,6 +1,6 @@
 {
-  "name": "clinlab-suite",
-  "version": "1.2.1",
+  "name": "clinlab-suite-endocrinologia",
+  "version": "1.2.2",
   "private": true,
   "type": "module",
   "scripts": {

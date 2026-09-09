@@ -17,6 +17,7 @@ build/
 *.zip
 AppData/
 LaboratorioSistema/
+LaboratorioSistema_Endocrinologia/
 exportaciones/
 logs/
 nube_simulada/

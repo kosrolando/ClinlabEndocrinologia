@@ -1,7 +1,7 @@
 {
-  "name": "ClinLab Suite",
-  "short_name": "ClinLab",
-  "description": "Sistema de gestion para laboratorios clinicos",
+  "name": "ClinLab Suite - Endocrinología",
+  "short_name": "ClinLab Endo",
+  "description": "Sistema de gestión para laboratorios clínicos - Endocrinología y Marcadores Tumorales",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#f6f8fb",

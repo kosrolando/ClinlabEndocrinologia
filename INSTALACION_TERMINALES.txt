@@ -5,12 +5,12 @@ ClinLab Suite - Instalacion en otra terminal
    https://nodejs.org
 3. Ejecute INICIAR_CLINLAB.bat.
 4. Abra el sistema en:
-   http://localhost:4244
+   http://localhost:4245
 5. Para crear acceso directo en el escritorio, haga clic derecho sobre
    INSTALAR_ACCESO_DIRECTO.ps1 y seleccione "Ejecutar con PowerShell".
 
 Notas:
-- Los datos se guardan en AppData/LaboratorioSistema con SQLite anual.
+- Los datos se guardan en AppData/LaboratorioSistema_Endocrinologia con SQLite anual.
 - Configure el enlace online obligatorio en Configuracion.
 - Exporte y registre respaldo online al menos cada dos meses.
 - Para mover datos entre terminales, use exportaciones, respaldo online o el asistente de restauracion.
