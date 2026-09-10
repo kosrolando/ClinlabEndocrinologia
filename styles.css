@@ -1698,6 +1698,7 @@ tr.dragging {
   display: flex;
   align-items: center;
   font-size: 12px;
+  -webkit-user-select: none;
   user-select: none;
 }
 .classic-tree summary::-webkit-details-marker {
@@ -1756,8 +1757,8 @@ tr.dragging {
   width: 100vw;
   height: 100vh;
   background: rgba(15, 30, 45, 0.85);
-  backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -1795,7 +1796,6 @@ tr.dragging {
   font-weight: 700;
   margin-bottom: 20px;
   line-height: 1.4;
-  text-wrap: balance;
 }
 .welcome-divider {
   width: 60px;
@@ -2336,7 +2336,7 @@ tr.dragging {
   border-radius: 12px;
   padding: 12px 18px;
   margin: 12px 20px 0 20px;
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
@@ -2542,6 +2542,7 @@ tr.dragging {
   color: #334155;
   cursor: pointer;
   transition: all 0.2s ease;
+  -webkit-user-select: none;
   user-select: none;
 }
 
@@ -2682,6 +2683,7 @@ tr.dragging {
   transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   text-align: left;
+  -webkit-user-select: none;
   user-select: none;
 }
 
@@ -2818,6 +2820,7 @@ tr.dragging {
   border: 1px solid transparent;
   transition: all 0.18s ease;
   white-space: nowrap;
+  -webkit-user-select: none;
   user-select: none;
 }
 
@@ -2887,6 +2890,364 @@ tr.dragging {
   }
 }
 
+/* ==========================================================================
+   CLASES DE MIGRACIÓN Y LIMPIEZA INLINE (index.html)
+   ========================================================================== */
 
+/* Barra lateral */
+.brand-subtitle {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-weight: 600;
+}
 
+/* Formulario de Paciente - Barra de progreso */
+.form-progress-wrap {
+  margin-bottom: 15px;
+}
+.form-progress-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.form-progress-label {
+  font-size: 0.85em;
+  color: var(--muted);
+  font-weight: 600;
+}
+.form-progress-percent {
+  font-size: 0.85em;
+  color: var(--teal);
+  font-weight: bold;
+}
+.form-progress-track {
+  width: 100%;
+  height: 8px;
+  background: var(--teal-2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.form-progress-fill {
+  width: 0%;
+  height: 100%;
+  background: var(--teal);
+  transition: width 0.3s ease;
+}
 
+/* Banner de solicitud con pruebas depuradas */
+.purged-warning-banner {
+  display: none;
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  color: #b91c1c;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  font-size: 0.9em;
+  font-weight: 600;
+}
+
+/* Campos y botones del formulario de paciente */
+.gender-field-col {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.gender-field-label {
+  color: var(--muted);
+}
+.patient-grid-2col {
+  grid-column: 1 / -1;
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.patient-field-title {
+  color: var(--muted);
+  font-weight: bold;
+}
+.required-samples-box {
+  margin-top: 4px;
+  padding: 8px 10px;
+  background: var(--teal-2);
+  color: var(--teal);
+  border-radius: 6px;
+  font-weight: bold;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  border: 1px solid #cceade;
+}
+.sample-status-group-wrap {
+  margin-top: 4px;
+  display: flex;
+  gap: 8px;
+  min-height: 36px;
+}
+.status-btn-opt {
+  flex: 1;
+  padding: 8px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.attention-field-col {
+  grid-column: 1 / -1;
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.attention-btn-group-wrap {
+  display: flex;
+  gap: 8px;
+}
+.attention-btn-opt {
+  flex: 1;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: white;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+.grid-col-full {
+  grid-column: 1 / -1;
+}
+
+/* Historial de pacientes */
+.patient-history-scroll-box {
+  display: flex;
+  flex-direction: column;
+  max-height: 520px;
+}
+.patient-search-container-wrap {
+  margin-bottom: 8px;
+}
+.patient-search-input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+.patient-history-table-wrap {
+  margin-top: 0;
+  max-height: 460px;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.sticky-thead {
+  position: sticky;
+  top: 0;
+  background: #f8fafc;
+  z-index: 2;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+/* Pestañas ocultas de áreas */
+.area-tabs-hidden {
+  display: none;
+}
+
+/* Catálogo externo */
+.outsource-panel-margin {
+  margin-bottom: 20px;
+}
+.outsource-desc {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+}
+
+/* Tabla de catálogo maestro */
+.th-w-40 {
+  width: 40px;
+}
+
+/* Listas de trabajo */
+.worklist-subtabs {
+  margin-bottom: 15px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 8px;
+  display: flex;
+  gap: 8px;
+}
+.btn-font-semibold {
+  font-weight: 600;
+}
+.select-max-550 {
+  max-width: 550px;
+  width: 100%;
+}
+.select-max-180 {
+  max-width: 180px;
+}
+
+/* Estadísticas */
+.stats-panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.stats-panel-sub {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.btn-export-excel {
+  background: #10b981;
+  color: white;
+  border: none;
+  cursor: pointer;
+  padding: 0 15px;
+  border-radius: 6px;
+  font-weight: bold;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 36px;
+  transition: background 0.2s;
+}
+.stats-section-title {
+  margin-top: 20px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 5px;
+}
+.stats-compact-grid {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.card-transition-bg {
+  transition: background 0.3s;
+}
+.stats-margin-b20 {
+  margin-bottom: 20px;
+}
+.stats-complex-tables-grid {
+  margin-top: 15px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+/* Configuración y Respaldos */
+.settings-backup-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.export-box-flush {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+.chrono-badges-wrap {
+  margin-bottom: 12px;
+}
+.chrono-desc-text {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+.chrono-btn-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+.btn-chrono-teal {
+  background: var(--teal);
+  color: white;
+  border: none;
+  padding: 9px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.btn-chrono-green {
+  background: #10b981;
+  color: white;
+  border: none;
+  padding: 9px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.btn-chrono-blue {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 9px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.date-export-block {
+  margin-top: 20px;
+  border-top: 1px dashed var(--line);
+  padding-top: 14px;
+}
+.date-export-title {
+  font-size: 0.95rem;
+  margin-bottom: 8px;
+}
+.date-export-inputs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.flex-1-label {
+  flex: 1;
+}
+.date-export-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.backup-window-wrap {
+  margin-top: 20px;
+}
+.backup-note-margin {
+  margin-top: 10px;
+}
+.danger-zone-box {
+  border-color: #fca5a5;
+}
+.danger-zone-title {
+  color: #dc2626;
+}
+.btn-factory-reset {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 6px;
+  width: 100%;
+  cursor: pointer;
+}
+
+/* Modal confirmación de guardado */
+.confirm-save-title {
+  color: var(--teal);
+  margin: 0;
+  font-weight: 700;
+}
+.form-actions-spaced {
+  margin-top: 16px;
+}
+.btn-confirm-save-report {
+  background-color: var(--teal);
+  color: white;
+}
+.btn-confirm-save-print {
+  background-color: #10b981;
+  color: white;
+}

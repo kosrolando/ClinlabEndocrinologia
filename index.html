@@ -3,12 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#1f7a4d" />
     <title>ClinLab Suite - Área de Endocrinología y Marcadores Tumorales | Hospital Materno Infantil - CNS</title>
     <link rel="manifest" href="manifest.json" />
     <link rel="icon" href="assets/icon.svg" />
+    <link rel="apple-touch-icon" href="assets/icon.svg" />
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=38" />
+    <link rel="stylesheet" href="styles.css?v=39" />
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
   </head>
   <body>
@@ -17,7 +17,7 @@
         <img id="brandLogo" src="assets/icon.svg" alt="" />
         <div>
           <strong>ClinLab Suite</strong>
-          <small style="display:block;font-size:0.75rem;color:var(--muted);font-weight:600;">Endocrinología y Marcadores</small>
+          <small class="brand-subtitle">Endocrinología y Marcadores</small>
         </div>
       </div>
       <nav id="nav">
@@ -45,7 +45,7 @@
         </div>
       </header>
 
-      <div id="purgeNoticeBanner" class="purge-notice-banner" style="display: none;">
+      <div id="purgeNoticeBanner" class="purge-notice-banner">
         <div class="purge-notice-content">
           <div class="purge-notice-icon">⚠️</div>
           <div class="purge-notice-body">
@@ -85,24 +85,24 @@
         <div class="grid patientGrid">
           <form id="patientForm" class="panel">
             <h2>Solicitud medica</h2>
-            <div id="formProgressContainer" style="margin-bottom: 15px;">
-              <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                <span style="font-size: 0.85em; color: var(--muted); font-weight: 600;">Progreso de datos obligatorios</span>
-                <span id="formProgressText" style="font-size: 0.85em; color: var(--teal); font-weight: bold;">0%</span>
+            <div id="formProgressContainer" class="form-progress-wrap">
+              <div class="form-progress-header">
+                <span class="form-progress-label">Progreso de datos obligatorios</span>
+                <span id="formProgressText" class="form-progress-percent">0%</span>
               </div>
-              <div style="width: 100%; height: 8px; background: var(--teal-2); border-radius: 4px; overflow: hidden;">
-                <div id="formProgressBar" style="width: 0%; height: 100%; background: var(--teal); transition: width 0.3s ease;"></div>
+              <div class="form-progress-track">
+                <div id="formProgressBar" class="form-progress-fill"></div>
               </div>
             </div>
-            <div id="purgedWarningBanner" style="display: none; background: #fee2e2; border: 1px solid #fca5a5; color: #b91c1c; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 0.9em; font-weight: 600;">⚠️ Esta solicitud contiene pruebas depuradas por inactividad.</div>
+            <div id="purgedWarningBanner" class="purged-warning-banner">⚠️ Esta solicitud contiene pruebas depuradas por inactividad.</div>
             <div class="patient-form-5col">
               <div class="patient-inputs-4col">
                 <div class="formGrid formGrid-4">
                   <div class="formSubtitle">Datos del paciente</div>
                   <label>Nombres y apellidos<input name="name" required /></label>
                   <label>Edad<input name="age" inputmode="numeric" pattern="[0-9]{1,3}" required /></label>
-                  <div style="display: flex; flex-direction: column; gap: 6px;">
-                    <span style="color: var(--muted); ">Genero</span>
+                  <div class="gender-field-col">
+                    <span class="gender-field-label">Genero</span>
                     <div class="gender-btn-group">
                       <button type="button" class="gender-btn" data-gender="MASCULINO">Masculino</button>
                       <button type="button" class="gender-btn" data-gender="FEMENINO">Femenino</button>
@@ -117,34 +117,34 @@
                   <label>Numero de cama<input name="bed" /></label>
 
                   <div class="formSubtitle">Identificador de Solicitud - Muestra</div>
-                  <label>Codigo de toma de muestra<input name="auxCode" required /></label>
+                  <label>Cod. Tarjeta<input name="auxCode" required /></label>
                   <label>Fecha<input name="date" type="date" required /></label>
-                  <div style="grid-column: 1 / -1; margin-top: 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                  <div class="patient-grid-2col">
                     <div>
-                      <span style="color: var(--muted);  font-weight: bold;">Muestras requeridas:</span>
-                      <div id="requiredSamplesList" style="margin-top: 4px; padding: 8px 10px; background: var(--teal-2); color: var(--teal); border-radius: 6px;  font-weight: bold; min-height: 36px; display: flex; align-items: center; border: 1px solid #cceade;">Ninguna prueba seleccionada</div>
+                      <span class="patient-field-title">Muestras requeridas:</span>
+                      <div id="requiredSamplesList" class="required-samples-box">Ninguna prueba seleccionada</div>
                     </div>
                     <div>
-                      <span style="color: var(--muted);  font-weight: bold;">Estado de la muestra:</span>
-                      <div class="sample-status-group" style="margin-top: 4px; display: flex; gap: 8px; min-height: 36px;">
-                        <button type="button" class="status-btn active" data-status="ACEPTADO" style="flex: 1; padding: 8px; border-radius: 6px;  font-weight: 600; cursor: pointer; transition: all 0.2s;">Aceptado</button>
-                        <button type="button" class="status-btn" data-status="RECHAZADO" style="flex: 1; padding: 8px; border-radius: 6px;  font-weight: 600; cursor: pointer; transition: all 0.2s;">Rechazado</button>
+                      <span class="patient-field-title">Estado de la muestra:</span>
+                      <div class="sample-status-group sample-status-group-wrap">
+                        <button type="button" class="status-btn active status-btn-opt" data-status="ACEPTADO">Aceptado</button>
+                        <button type="button" class="status-btn status-btn-opt" data-status="RECHAZADO">Rechazado</button>
                         <input type="hidden" name="sampleStatus" id="sampleStatus" value="ACEPTADO" />
                       </div>
                     </div>
                   </div>
                   
-                  <div style="grid-column: 1 / -1; margin-top: 8px; display: flex; flex-direction: column; gap: 6px;">
-                    <span style="color: var(--muted); font-weight: bold;">Tipo de atencion</span>
-                    <div class="attention-btn-group" style="display: flex; gap: 8px;">
-                      <button type="button" class="attention-btn" data-attention="Rutina" style="flex: 1; padding: 8px; border-radius: 6px; border: 1px solid var(--line); background: white; cursor: pointer; font-weight: 600; transition: all 0.2s;">Rutina</button>
-                      <button type="button" class="attention-btn" data-attention="Emergencias" style="flex: 1; padding: 8px; border-radius: 6px; border: 1px solid var(--line); background: white; cursor: pointer; font-weight: 600; transition: all 0.2s;">Emergencias</button>
+                  <div class="attention-field-col">
+                    <span class="patient-field-title">Tipo de atencion</span>
+                    <div class="attention-btn-group attention-btn-group-wrap">
+                      <button type="button" class="attention-btn attention-btn-opt" data-attention="Rutina">Rutina</button>
+                      <button type="button" class="attention-btn attention-btn-opt" data-attention="Emergencias">Emergencias</button>
                       <input type="hidden" name="attentionType" id="attentionType" required />
                     </div>
                   </div>
 
                   <div class="formSubtitle">Diagnostico</div>
-                  <label style="grid-column: 1 / -1;">
+                  <label class="grid-col-full">
                     Diagnostico(s)
                     <input name="diagnosis" id="patientDiagnosis" list="diagnosisSuggestions" placeholder="Escriba el o los diagnósticos" autocomplete="off" required />
                   </label>
@@ -160,13 +160,13 @@
                   <button type="button" id="clearPatient">Limpiar</button>
                 </div>
               </div>
-              <div class="patient-history-1col" style="display: flex; flex-direction: column; max-height: 520px;">
-                <div class="patient-search-container" style="margin-bottom: 8px;">
-                  <input id="patientSearchInput" placeholder="Buscar paciente por nombre o código..." style="width: 100%; padding: 8px; border: 1px solid var(--line); border-radius: 4px;" />
+              <div class="patient-history-1col patient-history-scroll-box">
+                <div class="patient-search-container patient-search-container-wrap">
+                  <input id="patientSearchInput" placeholder="Buscar paciente por nombre o código..." class="patient-search-input" />
                 </div>
-                <div class="miniTable" style="margin-top: 0; max-height: 460px; overflow-y: auto; border: 1px solid var(--line); border-radius: 8px;">
+                <div class="miniTable patient-history-table-wrap">
                   <table>
-                    <thead style="position: sticky; top: 0; background: #f8fafc; z-index: 2; box-shadow: 0 1px 2px rgba(0,0,0,0.05);"><tr><th>Codigo</th><th>Paciente</th><th>Fecha</th></tr></thead>
+                    <thead class="sticky-thead"><tr><th>Codigo</th><th>Paciente</th><th>Fecha</th></tr></thead>
                     <tbody id="patientRows"></tbody>
                   </table>
                 </div>
@@ -185,7 +185,7 @@
                   </div>
                   <div id="quickProfilesBar" class="quick-profiles-bar"></div>
                 </div>
-                <div id="areaTabs" class="tabs" style="display: none;"></div>
+                <div id="areaTabs" class="tabs area-tabs-hidden"></div>
                 <div id="testTree" class="testTree"></div>
               </div>
               <div class="asignacion-assigned">
@@ -197,9 +197,9 @@
       </section>
 
       <section id="catalog" class="view">
-        <section class="panel" style="margin-bottom: 20px;">
+        <section class="panel outsource-panel-margin">
           <h2>Áreas - Compras de Servicios (Envío de Muestras)</h2>
-          <p style="color: var(--muted); font-size: 0.9rem; margin-bottom: 12px;">
+          <p class="outsource-desc">
             Seleccione las áreas destinadas únicamente al envío de muestras a otros laboratorios externos. Estas áreas se ocultarán de los reportes y estadísticas internas.
           </p>
           <div id="outsourceAreasContainer" class="outsource-grid">
@@ -212,7 +212,7 @@
             <h2>Catalogo maestro</h2>
             <div class="filters">
               <input id="catalogSearch" placeholder="Buscar" />
-              <select id="catalogArea"></select>
+              <select id="catalogArea" title="Filtrar por área"></select>
 
               <button id="addTest">Nueva prueba</button>
               <input type="file" id="importExcel" accept=".xlsx, .xls" hidden />
@@ -223,7 +223,7 @@
           <p id="catalogGuide" class="guideLine"></p>
           <div class="tableWrap">
             <table>
-              <thead><tr><th style="width: 40px"></th><th>Area</th><th>Determinacion</th><th>Clasificacion</th><th>Parametro</th><th>Tipo</th><th>Muestra</th><th>Unidad</th><th>Minimo</th><th>Maximo</th><th>Referencia</th><th>Activo</th><th>Menu</th></tr></thead>
+              <thead><tr><th class="th-w-40"></th><th>Area</th><th>Determinacion</th><th>Clasificacion</th><th>Parametro</th><th>Tipo</th><th>Muestra</th><th>Unidad</th><th>Minimo</th><th>Maximo</th><th>Referencia</th><th>Activo</th><th>Menu</th></tr></thead>
               <tbody id="catalogRows"></tbody>
             </table>
           </div>
@@ -231,9 +231,9 @@
       </section>
 
       <section id="worklist" class="view">
-        <div class="tabs noPrint" id="worklistSubmenu" style="margin-bottom: 15px; border-bottom: 1px solid var(--line); padding-bottom: 8px; display: flex; gap: 8px;">
-          <button type="button" class="active" id="subviewWorklistBtn" style="font-weight: 600;">Lista de Trabajo Interna</button>
-          <button type="button" id="subviewEpidemiologyBtn" style="font-weight: 600;">Lista Epidemiológica por Prueba</button>
+        <div class="tabs noPrint worklist-subtabs" id="worklistSubmenu">
+          <button type="button" class="active btn-font-semibold" id="subviewWorklistBtn">Lista de Trabajo Interna</button>
+          <button type="button" class="btn-font-semibold" id="subviewEpidemiologyBtn">Lista Epidemiológica por Prueba</button>
         </div>
 
         <div id="internalWorklistPanel">
@@ -246,13 +246,13 @@
                   <input id="workDateTo" type="date" title="Hasta fecha" />
                 </div>
                 <div class="filter-col">
-                  <select id="workArea"></select>
-                  <select id="workAreaExclude"></select>
+                  <select id="workArea" title="Filtrar por área"></select>
+                  <select id="workAreaExclude" title="Excluir área"></select>
                 </div>
                 <div class="filter-col">
                   <input id="workTestFilter" placeholder="Prueba" />
                   <input id="workPatientFilter" placeholder="Paciente" />
-                  <select id="workGroup">
+                  <select id="workGroup" title="Criterio de agrupación">
                     <option value="date">Agrupar por fecha</option>
                     <option value="code">Agrupar por codigo</option>
                     <option value="name">Agrupar por nombre</option>
@@ -275,7 +275,7 @@
                   <input id="epidemiologyDateTo" type="date" title="Hasta fecha" />
                 </div>
                 <div class="filter-col">
-                  <select id="epidemiologyParameterSelect" style="max-width: 550px; width: 100%;">
+                  <select id="epidemiologyParameterSelect" class="select-max-550">
                     <option value="">Seleccione un parámetro...</option>
                   </select>
                 </div>
@@ -292,8 +292,8 @@
             <h2>Busqueda y reportes</h2>
             <div class="filters">
               <input id="reportSearch" placeholder="Codigo, paciente, medico o fecha" />
-              <input id="reportDate" type="date" />
-              <select id="reportPaperFormatSelect" title="Formato de hoja de impresión" style="max-width: 180px;">
+              <input id="reportDate" type="date" title="Filtrar por fecha" />
+              <select id="reportPaperFormatSelect" title="Formato de hoja de impresión" class="select-max-180">
                 <option value="media_carta" selected>Media Carta (216x140mm)</option>
                 <option value="a5_horizontal">A5 Horizontal (210x148mm)</option>
                 <option value="medio_oficio">Medio Oficio (216x165mm)</option>
@@ -310,20 +310,20 @@
       <section id="statistics" class="view" hidden>
         <section class="panel">
           <div id="statsPrintHeader"></div>
-          <div class="panelHead" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px;">
+          <div class="panelHead stats-panel-head">
             <div>
               <h2>Panel de Control y Estadísticas</h2>
-              <p style="color: var(--muted); font-size: 0.9rem;">Producción general, calidad y reportes epidemiológicos.</p>
+              <p class="stats-panel-sub">Producción general, calidad y reportes epidemiológicos.</p>
             </div>
             <div class="filters">
               <input id="statsFrom" type="date" title="Desde la fecha" />
               <input id="statsTo" type="date" title="Hasta la fecha" />
-              <button id="exportStatsExcel" style="background: #10b981; color: white; border: none; cursor: pointer; padding: 0 15px; border-radius: 6px; font-weight: bold; display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 36px; transition: background 0.2s;" title="Exportar Estadísticas a Excel">Exportar Excel</button>
+              <button id="exportStatsExcel" class="btn-export-excel" title="Exportar Estadísticas a Excel">Exportar Excel</button>
             </div>
           </div>
           
-          <h3 style="margin-top: 20px; border-bottom: 1px solid var(--line); padding-bottom: 5px;">Producción General y Calidad</h3>
-          <div class="metrics compactMetrics" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 20px;">
+          <h3 class="stats-section-title">Producción General y Calidad</h3>
+          <div class="metrics compactMetrics stats-compact-grid">
             <article><span>Total Pacientes</span><strong id="kpiPacientes">0</strong></article>
             <article><span>Total Muestras</span><strong id="kpiMuestras">0</strong></article>
             <article><span>Pruebas Realizadas</span><strong id="kpiPruebas">0</strong></article>
@@ -334,20 +334,20 @@
             <article><span>Días Trabajados</span><strong id="kpiDias">0</strong></article>
             <article><span>Producción Diaria</span><strong id="kpiProdDiaria">0</strong></article>
             <article><span>Variación Mensual</span><strong id="kpiVariacion">0%</strong></article>
-            <article id="kpiRechazosCard" style="transition: background 0.3s;"><span>Tasa Rechazos</span><strong id="kpiRechazos">0%</strong></article>
+            <article id="kpiRechazosCard" class="card-transition-bg"><span>Tasa Rechazos</span><strong id="kpiRechazos">0%</strong></article>
           </div>
 
-          <h3 style="margin-top: 20px; border-bottom: 1px solid var(--line); padding-bottom: 5px;">Envío de Muestras Externas (Derivación)</h3>
-          <div class="metrics compactMetrics" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 20px;">
+          <h3 class="stats-section-title">Envío de Muestras Externas (Derivación)</h3>
+          <div class="metrics compactMetrics stats-compact-grid">
             <article><span>Pacientes Atendidos</span><strong id="kpiExtPacientes">0</strong></article>
             <article><span>Muestras Generadas</span><strong id="kpiExtMuestras">0</strong></article>
             <article><span>Asignaciones de Producción</span><strong id="kpiExtAsignaciones">0</strong></article>
             <article><span>Parámetros Almacenados</span><strong id="kpiExtParametros">0</strong></article>
           </div>
-          <div id="extElementsContainer" style="margin-bottom: 20px;"></div>
+          <div id="extElementsContainer" class="stats-margin-b20"></div>
 
-          <h3 style="margin-top: 20px; border-bottom: 1px solid var(--line); padding-bottom: 5px;">Distribución Epidemiológica y Jerarquía de Áreas</h3>
-          <div id="statsComplexTables" style="margin-top: 15px; display: grid; grid-template-columns: 1fr; gap: 20px;">
+          <h3 class="stats-section-title">Distribución Epidemiológica y Jerarquía de Áreas</h3>
+          <div id="statsComplexTables" class="stats-complex-tables-grid">
             <!-- Rendered by JS -->
           </div>
         </section>
@@ -377,17 +377,17 @@
             </label>
             <button type="submit">Guardar identidad</button>
           </form>
-          <div style="display: flex; flex-direction: column; gap: 20px;">
+          <div class="settings-backup-column">
             <div class="panel">
-              <div class="exportBox" style="margin-top: 0; padding-top: 0; border-top: none;">
+              <div class="exportBox export-box-flush">
                 <h2>Archivo y Respaldos Cronológicos (12 Meses)</h2>
-                <div class="chrono-stats-badges" style="margin-bottom: 12px;">
+                <div class="chrono-stats-badges chrono-badges-wrap">
                   <span id="chronoBadgeTotal" class="chrono-badge total-badge">Total: 0 registros</span>
                   <span id="chronoBadgeActive" class="chrono-badge active-badge">Activos (≤3m): 0</span>
                   <span id="chronoBadgeArchive" class="chrono-badge archive-badge">Históricos (4-12m): 0</span>
                 </div>
                 
-                <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 10px;">Seleccione el período cronológico deseado para descargar su respaldo estructurado o exportación local:</p>
+                <p class="chrono-desc-text">Seleccione el período cronológico deseado para descargar su respaldo estructurado o exportación local:</p>
                 <div class="chrono-selectors-grid">
                   <label>Año
                     <select id="chronoYearSelect"><option value="">Todos los años</option></select>
@@ -400,33 +400,33 @@
                   </label>
                 </div>
                 
-                <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px;">
-                  <button type="button" id="downloadChronoJsonBtn" style="background: var(--teal); color: white; border: none; padding: 9px 14px; border-radius: 6px; cursor: pointer; font-weight: 600;">📥 Descargar Respaldo JSON</button>
-                  <button type="button" id="downloadChronoExcelBtn" style="background: #10b981; color: white; border: none; padding: 9px 14px; border-radius: 6px; cursor: pointer; font-weight: 600;">📊 Exportar a Excel</button>
-                  <button type="button" id="downloadFullBackupBtn" style="background: #3b82f6; color: white; border: none; padding: 9px 14px; border-radius: 6px; cursor: pointer; font-weight: 600;">📦 Respaldo Completo (12 Meses)</button>
+                <div class="chrono-btn-row">
+                  <button type="button" id="downloadChronoJsonBtn" class="btn-chrono-teal">📥 Descargar Respaldo JSON</button>
+                  <button type="button" id="downloadChronoExcelBtn" class="btn-chrono-green">📊 Exportar a Excel</button>
+                  <button type="button" id="downloadFullBackupBtn" class="btn-chrono-blue">📦 Respaldo Completo (12 Meses)</button>
                 </div>
 
-                <div style="margin-top: 20px; border-top: 1px dashed var(--line); padding-top: 14px;">
-                  <h3 style="font-size: 0.95rem; margin-bottom: 8px;">Exportación por Rango de Fechas</h3>
-                  <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                    <label style="flex: 1;">Fecha inicial<input id="exportDateFrom" type="date" /></label>
-                    <label style="flex: 1;">Fecha final<input id="exportDateTo" type="date" /></label>
+                <div class="date-export-block">
+                  <h3 class="date-export-title">Exportación por Rango de Fechas</h3>
+                  <div class="date-export-inputs">
+                    <label class="flex-1-label">Fecha inicial<input id="exportDateFrom" type="date" /></label>
+                    <label class="flex-1-label">Fecha final<input id="exportDateTo" type="date" /></label>
                   </div>
-                  <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                  <div class="date-export-actions">
                     <button type="button" id="refreshSystem">Actualizar y refrescar sistema</button>
                     <button type="button" id="exportExcel">Exportar rango Excel</button>
                   </div>
                 </div>
               </div>
-              <div class="backupWindow" style="margin-top: 20px;">
+              <div class="backupWindow backup-window-wrap">
                 <h2>Historial de respaldos</h2>
                 <div id="backupHistory" class="backupHistory"></div>
               </div>
-              <p class="note" style="margin-top: 10px;">Los respaldos se generan de forma local y estructurada (Año/Mes/Día). Los datos se conservan por 12 meses con preaviso de 7 días antes de depurar registros históricos.</p>
+              <p class="note backup-note-margin">Los respaldos se generan de forma local y estructurada (Año/Mes/Día). Los datos se conservan por 12 meses con preaviso de 7 días antes de depurar registros históricos.</p>
             </div>
-            <div class="panel exportBox" style="border-color: #fca5a5;">
-              <h2 style="color: #dc2626;">Zona de Peligro</h2>
-              <button type="button" id="factoryReset" style="background: #ef4444; color: white; border: none; padding: 10px; border-radius: 6px; width: 100%; cursor: pointer;">Restablecer Sistema (Borrar Todo)</button>
+            <div class="panel exportBox danger-zone-box">
+              <h2 class="danger-zone-title">Zona de Peligro</h2>
+              <button type="button" id="factoryReset" class="btn-factory-reset">Restablecer Sistema (Borrar Todo)</button>
             </div>
           </div>
         </div>
@@ -490,16 +490,16 @@
     </div>
     <div id="confirmSaveModal" class="modalOverlay" hidden>
       <section class="modalBox wide confirm-save-modal-box">
-        <h2 id="confirmSaveTitle" style="color: var(--teal); margin: 0; font-weight: 700;">Confirmar Registro</h2>
+        <h2 id="confirmSaveTitle" class="confirm-save-title">Confirmar Registro</h2>
         <div id="confirmSaveContent"></div>
-        <div class="formActions" style="margin-top: 16px;">
+        <div class="formActions form-actions-spaced">
           <button type="button" id="confirmSaveCancel">Cancelar</button>
           <button type="button" id="confirmSaveBtn">Confirmar y Cerrar</button>
-          <button type="button" id="confirmSaveReportBtn" style="background-color: var(--teal); color: white;">Reportar</button>
-          <button type="button" id="confirmSavePrintBtn" style="background-color: #10b981; color: white;" hidden>Guardar e Imprimir</button>
+          <button type="button" id="confirmSaveReportBtn" class="btn-confirm-save-report">Reportar</button>
+          <button type="button" id="confirmSavePrintBtn" class="btn-confirm-save-print" hidden>Guardar e Imprimir</button>
         </div>
       </section>
     </div>
-    <script type="module" src="app.js?v=38"></script>
+    <script type="module" src="app.js?v=40"></script>
   </body>
 </html>

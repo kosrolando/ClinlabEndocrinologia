@@ -1,4 +1,4 @@
-const CACHE = "clinlab-suite-endo-v38";
+const CACHE = "clinlab-suite-endo-v40";
 const ASSETS = [
   "./",
   "./index.html",

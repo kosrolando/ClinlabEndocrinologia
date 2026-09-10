@@ -33,7 +33,7 @@ git add .
 
 echo.
 echo 4. Realizando commit de actualizacion...
-git commit -m "v1.2.2 - Actualizacion a puerto 4245, aislamiento local e identidad institucional CNS Materno Infantil"
+git commit -m "v1.3.0 - Catalogo ampliado a 50 determinaciones clinicas, perfiles rapidos actualizados, etiqueta Cod. Tarjeta y cache v40"
 
 echo.
 echo 5. Enviando cambios a GitHub (main)...
